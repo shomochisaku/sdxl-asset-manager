@@ -38,14 +38,64 @@ mypy src/
 ruff check src/
 ```
 
+## Claude GitHub App セットアップ手順
+
+### 🚨 重要：正しいセットアップ方法
+
+Claude GitHub Appを使用するには、**リポジトリ個別でのインストール**が必要です。
+
+#### 1. 前提条件
+- ✅ Claude Pro (MAX) サブスクリプション
+- ✅ GitHub CLI (`gh`) インストール済み
+- ✅ Claude Code CLI 使用
+
+#### 2. セットアップ手順
+```bash
+# 1. リポジトリ個別でClaude GitHub Appをインストール
+/install-github-app
+
+# 2. 設定画面で以下を選択
+# - @Claude Code (Issue/PRメンション対応) ✅
+# - Claude Code Review (PR自動レビュー) ✅  
+# - Subscription (Maxプラン使用) ✅
+
+# 3. ブラウザでClaude.ai認証
+# - 権限許可
+# - GitHub連携
+
+# 4. 自動PRのマージ
+# - .github/workflows/claude-code-review.yml
+# - .github/workflows/claude.yml
+```
+
+#### 3. 使用方法
+```bash
+# Issueで@claudeメンション
+@claude この Issue を実装してください
+
+# 1分以内に反応開始
+# - 自動ブランチ作成
+# - 実装ファイル作成  
+# - PR自動作成
+```
+
+#### ❌ 間違った方法（動作しない）
+- GitHub Apps画面からの手動インストール
+- 手動でのワークフロー作成
+- APIキーのみでの設定
+
+#### ✅ 正しい方法
+- `/install-github-app` コマンド使用
+- Claude.aiサブスクリプション連携
+- 公式ワークフローの自動生成
+
 ## Issue対応ガイド
 
 ### Issue処理の流れ
 1. Issueの内容を理解
-2. featureブランチを作成: `feature/issue-{番号}`
-3. 実装とテストを作成
-4. 型チェックとリンターを通す
-5. PRを作成（自動レビュー含む）
+2. `@claude` でメンション（自動でfeatureブランチ作成）
+3. Claude GitHub Appが自動実装
+4. 生成されたPRをレビュー・マージ
 
 ### 実装優先順位
 1. **Phase 1**: 基本機能（DB、YAML loader、CLI）
