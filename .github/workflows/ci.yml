@@ -36,7 +36,7 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest tests/ -x --tb=short
+        pytest tests/ --tb=short
     
     - name: Run mypy type checking
       run: |

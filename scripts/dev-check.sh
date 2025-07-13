@@ -30,7 +30,7 @@ echo "✅ Linting passed"
 
 echo ""
 echo "🧪 Step 3: Running tests..."
-python3 -m pytest tests/ -x --tb=short || {
+python3 -m pytest tests/ --tb=short || {
     echo "❌ Tests failed"
     exit 1
 }

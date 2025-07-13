@@ -79,7 +79,7 @@ deps = -rrequirements.txt
 commands = 
     mypy src/
     ruff check src/
-    pytest tests/ -x --tb=short
+    pytest tests/ --tb=short
 """
 
 [build-system]

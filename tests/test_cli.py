@@ -122,10 +122,11 @@ class TestCLIErrorHandling:
 
     def test_handle_file_not_found_error(self, runner):
         """ファイルが見つからないエラーの処理をテストします."""
-        # 存在しない設定ファイルを指定
-        result = runner.invoke(cli, ['--config', '/nonexistent/file.env', '--help'])
+        # 存在しない設定ファイルを指定（--helpを使わずにコマンド実行）
+        result = runner.invoke(cli, ['--config', '/nonexistent/file.env', 'db', 'status'])
         # Click自体が存在チェックするため、エラーが発生する
         assert result.exit_code != 0
+        assert 'does not exist' in result.output
 
     def test_verbose_error_output(self, runner):
         """--verboseでの詳細エラー出力をテストします."""
