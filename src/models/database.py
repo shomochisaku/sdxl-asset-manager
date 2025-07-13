@@ -6,17 +6,15 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     REAL,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
-    UniqueConstraint,
     event,
     func,
 )
@@ -33,7 +31,7 @@ class Base(DeclarativeBase):
 
 class Model(Base):
     """モデル情報テーブル.
-    
+
     Checkpoints, LoRA, VAE, ControlNetなどのAIモデル情報を管理します。
     """
 
