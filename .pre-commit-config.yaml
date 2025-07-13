@@ -1,0 +1,39 @@
+# Pre-commit hooks for SDXL Asset Manager
+# See https://pre-commit.com for more information
+# Install with: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy type checking
+        entry: python -m mypy
+        language: system
+        args: [src/]
+        types: [python]
+        pass_filenames: false
+        
+      - id: ruff-check
+        name: ruff linting
+        entry: python -m ruff check
+        language: system
+        args: [src/, --fix]
+        types: [python]
+        pass_filenames: false
+        
+      - id: pytest-fast
+        name: pytest (fast tests only)
+        entry: python -m pytest
+        language: system
+        args: [tests/, -x, --tb=short, -m, "not slow"]
+        types: [python]
+        pass_filenames: false
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict

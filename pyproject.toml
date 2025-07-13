@@ -68,6 +68,20 @@ addopts = [
 line-length = 100
 target-version = ['py39']
 
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39,py310,py311,py312
+isolated_build = true
+
+[testenv]
+deps = -rrequirements.txt
+commands = 
+    mypy src/
+    ruff check src/
+    pytest tests/ -x --tb=short
+"""
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

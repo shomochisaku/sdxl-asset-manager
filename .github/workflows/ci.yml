@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
     - uses: actions/checkout@v4
@@ -36,15 +36,15 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest || echo "No tests found yet - this is expected for initial setup"
+        pytest tests/ -x --tb=short
     
-    - name: Run mypy
+    - name: Run mypy type checking
       run: |
         mypy src/
     
-    - name: Run ruff
+    - name: Run ruff linting
       run: |
-        ruff check src/
+        ruff check src/ --statistics
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
