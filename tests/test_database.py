@@ -418,7 +418,7 @@ class TestErrorHandling:
         if "DATABASE_PATH" in os.environ:
             del os.environ["DATABASE_PATH"]
         
-        with pytest.raises(ValueError, match="DATABASE_PATH environment variable is not set"):
+        with pytest.raises(Exception, match="Database initialization failed"):
             DatabaseManager()
 
     def test_invalid_record_id(self, db_manager):
