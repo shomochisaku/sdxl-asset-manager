@@ -141,43 +141,54 @@ Claude GitHub Appを使用するには、**リポジトリ個別でのインス�
 - ✅ Claude Code Review自動レビュー
 - ✅ テストカバレッジ設定
 
-#### Phase 1: データベース基盤 (Issue #10)
-- ✅ SQLAlchemyモデル設計・実装 (6テーブル)
-  - Model, Run, Image, Tag, RunLora, RunTag
-- ✅ データベース初期化機能
-- ✅ CRUD操作ユーティリティ
-- ✅ 包括的テストスイート (21テスト)
-- ✅ 型安全なデータベース操作
+#### Phase 1: 基本機能実装
+1. **データベース基盤 (Issue #10) ✅ 完了**
+   - SQLAlchemyモデル設計・実装 (6テーブル)
+   - データベース初期化機能
+   - CRUD操作ユーティリティ
+   - 包括的テストスイート (21テスト)
+   - PR #11でマージ済み
+
+2. **YAMLローダー (Issue #2) ✅ 完了**
+   - YAMLファイル読み込み・バリデーション
+   - SQLAlchemyモデルへの変換
+   - データベース挿入機能
+   - LoRA・モデル関係管理
+   - 包括的テストスイート (47テスト)
+   - PR #12でマージ済み
 
 #### 技術的解決事項
 - ✅ SQLAlchemy 2.0+ 対応
 - ✅ DetachedInstanceError対策 (session.expunge)
-- ✅ 型注釈現代化 (Python 3.10+スタイル)
-- ✅ mypy厳格チェック設定
+- ✅ 型注釈対応 (mypy strict mode)
+- ✅ Claude GitHub App運用フロー確立
+- ✅ ブランチ保護ルール運用経験
 
 ### 🔄 進行中
 
-#### PR #11 - データベース基盤実装
-- **状況**: CI修正中、マージ待ち
-- **問題**: ruff style check (120+エラー) → 一時無効化済み
-- **対応**: 基本機能優先、スタイル修正は後続タスクで対応
+#### Issue #13 - CLI基本機能実装
+- **状況**: Claude GitHub App実装中
+- **内容**: click使用のモダンCLI
+- **コマンド**: db, yaml, search, run
+- **優先度**: Phase 1最終タスク
 
 ### 📋 次のステップ
 
-#### 1. PR #11完了後の即座対応
-- [ ] GitHub branch protection: status checksを有効化
-- [ ] Issue #10クローズ
-- [ ] ruff style問題修正 (別Issue/PR)
-
-#### 2. Phase 1残課題 (Issue #2)
-- [ ] YAML loader実装 (schema.sql → models変換)
-- [ ] CLI基本機能実装
+#### 1. Phase 1完了後の即座対応
+- [ ] CLI実装完了・テスト (Issue #13)
 - [ ] データベースマイグレーション機能
+- [ ] ruff style問題修正 (別Issue/PR)
+- [ ] Phase 1統合テスト実施
 
-#### 3. Phase 2以降
-- [ ] Notion API同期機能
-- [ ] ComfyUI API連携
+#### 2. Phase 2: 外部連携機能
+- [ ] Notion API同期機能 (Issue #4)
+- [ ] ComfyUI API連携 (Issue #5)
+- [ ] バッチ処理・自動化
+
+#### 3. Phase 3以降
 - [ ] LLMエージェント機能
+- [ ] Web UI実装
+- [ ] 高度な検索・分析機能
 
 ### 🚨 既知の課題
 
@@ -194,16 +205,24 @@ Claude GitHub Appを使用するには、**リポジトリ個別でのインス�
 ### 💡 学習事項
 
 1. **Claude GitHub App運用**
-   - 自動実装は成功、手動PRマージが必要
+   - 自動実装は成功、手動PR作成・マージが必要
    - CI失敗時のトラブルシューティング経験蓄積
+   - @claudeメンションで効率的な実装指示
 
 2. **SQLAlchemy 2.0移行**
    - session管理のベストプラクティス習得
    - 型安全性の重要性確認
+   - DetachedInstanceError対策の実装
 
 3. **CI/CD最適化**
    - 段階的品質チェック (tests → types → style)
    - 一時的無効化による開発速度とクオリティのバランス
+   - ブランチ保護ルールの柔軟な運用
+
+4. **開発フロー最適化**
+   - Claude Code CLI: 設計・調査・指示
+   - Claude GitHub App: 実装・テスト作成
+   - 役割分担による効率的な開発
 
 ## 注意事項
 
