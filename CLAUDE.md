@@ -24,6 +24,37 @@ Stable Diffusion XLの購入素材と自作生成ログを一元管理し、最�
 - エラーハンドリングを適切に実装
 - セキュリティベストプラクティスに従う
 
+### 🚨 重要：CI/型チェック互換性
+**Python 3.9+互換性の維持が必須**です。以下の型注釈は避けてください：
+
+#### ❌ 使用禁止（Python 3.10+でのみ利用可能）
+```python
+# Union type syntax (Python 3.10+)
+def func() -> str | None:  # ❌ NG
+def func() -> dict[str, Any]:  # ❌ NG  
+def func() -> list[Model]:  # ❌ NG
+def func() -> type[Model]:  # ❌ NG
+```
+
+#### ✅ 推奨（Python 3.9+互換）
+```python
+from typing import Dict, List, Optional, Type, Union
+
+def func() -> Optional[str]:  # ✅ OK
+def func() -> Dict[str, Any]:  # ✅ OK
+def func() -> List[Model]:  # ✅ OK
+def func() -> Type[Model]:  # ✅ OK
+def func() -> Union[str, int]:  # ✅ OK
+```
+
+#### よくあるCIエラーと対処法
+- **mypy Error**: `unsupported operand type(s) for |`
+  → `str | None` を `Optional[str]` に変更
+- **mypy Error**: `'type' object is not subscriptable`
+  → `dict[str, Any]` を `Dict[str, Any]` に変更
+- **ImportError**: `types-PyYAML` 関連
+  → `# type: ignore[import-untyped]` で対応
+
 ### ブランチ戦略
 - Git-flowを採用
 - feature/ブランチで開発
@@ -193,7 +224,7 @@ Claude GitHub Appを使用するには、**リポジトリ個別でのインス�
 ### 🚨 既知の課題
 
 1. **ruffスタイルエラー (120+件)**
-   - 型注釈の現代化 (`Optional[T]` → `T | None`)
+   - ~~型注釈の現代化 (`Optional[T]` → `T | None`)~~ **注意**: これは実施しない（CI互換性のため）
    - 未使用インポートの削除
    - 空白行の修正
    - **対応**: 別途Issue作成して修正予定
@@ -201,6 +232,10 @@ Claude GitHub Appを使用するには、**リポジトリ個別でのインス�
 2. **datetime.utcnow() 非推奨警告**
    - SQLAlchemyモデルで使用中
    - **対応**: `datetime.now(datetime.UTC)` への移行必要
+
+3. **型注釈互換性問題（解決済み）**
+   - Python 3.10+型注釈を使用するとCI失敗
+   - **対策**: Python 3.9+互換の`Optional[T]`, `Dict[str, Any]`等を使用
 
 ### 💡 学習事項
 
