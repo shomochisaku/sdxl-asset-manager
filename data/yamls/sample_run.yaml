@@ -1,0 +1,14 @@
+run_title: "Cute Girl Turbo"
+model: "SDXL-Turbo-0.9"
+loras: ["animeSharp_v1"]
+vae: "sdxl_vae.safetensors"
+prompt: |-
+  masterpiece, 1girl, best quality
+negative: |-
+  lowres, bad anatomy, watermark
+cfg: 4
+steps: 25
+sampler: "DPM++ 2M"
+seed: 123456
+source: "作者名 / URL"
+status: "Purchased"
