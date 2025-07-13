@@ -9,7 +9,7 @@ from typing import Optional
 
 from sqlalchemy import Index, create_engine, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from src.models.database import Base
 
@@ -163,7 +163,7 @@ def initialize_database(db_path: Optional[str] = None) -> Engine:
         raise Exception(f"Database initialization failed: {e}") from e
 
 
-def get_session_factory(engine: Engine) -> sessionmaker:
+def get_session_factory(engine: Engine) -> sessionmaker[Session]:
     """セッションファクトリを作成します.
     
     Args:
@@ -207,7 +207,10 @@ def verify_database_setup(engine: Engine) -> bool:
             
             # 外部キー制約が有効かを確認
             result = conn.execute(text("PRAGMA foreign_keys"))
-            foreign_keys_enabled = result.fetchone()[0]
+            row = result.fetchone()
+            if row is None:
+                return False
+            foreign_keys_enabled = row[0]
             if not foreign_keys_enabled:
                 return False
                 

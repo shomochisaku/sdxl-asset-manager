@@ -32,7 +32,7 @@ class DatabaseManager:
             db_path: データベースファイルのパス（Noneの場合は環境変数から取得）
         """
         self.engine: Engine = initialize_database(db_path)
-        self.session_factory: sessionmaker = get_session_factory(self.engine)
+        self.session_factory: sessionmaker[Session] = get_session_factory(self.engine)
 
     @contextmanager
     def get_session(self) -> Generator[Session, None, None]:
@@ -88,7 +88,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            primary_key = next(iter(model_class.__table__.primary_key.columns))
             return cast(
                 Optional[ModelType],
                 session.query(model_class).filter(primary_key == record_id).first()
@@ -154,7 +154,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            primary_key = next(iter(model_class.__table__.primary_key.columns))
             record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
@@ -163,7 +163,7 @@ class DatabaseManager:
                         setattr(record, key, value)
                 session.flush()
                 session.refresh(record)
-                return cast(Optional[ModelType], record)
+                return record
             return None
 
     def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
@@ -181,7 +181,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            primary_key = next(iter(model_class.__table__.primary_key.columns))
             record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
@@ -229,8 +229,7 @@ def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
         最近の実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return cast(
-            List[Run],
+        return (
             session.query(Run)
             .order_by(desc(Run.created_at))
             .limit(limit)
@@ -252,8 +251,7 @@ def search_runs_by_prompt(
         検索にマッチした実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return cast(
-            List[Run],
+        return (
             session.query(Run)
             .filter(
                 or_(
