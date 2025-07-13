@@ -44,7 +44,7 @@ jobs:
     
     - name: Run ruff
       run: |
-        echo "Temporarily disabled ruff check to unblock PR #11"
+        ruff check src/
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3

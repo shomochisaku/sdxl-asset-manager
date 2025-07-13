@@ -281,7 +281,7 @@ class CliState:
             ctx: Click コンテキスト
         """
         self.ctx = ctx
-        self._db_manager: DatabaseManager | None = None
+        self._db_manager: Optional[DatabaseManager] = None
 
     @property
     def db_manager(self) -> DatabaseManager:
