@@ -9,6 +9,9 @@ packages = [{include = "src"}]
 [tool.poetry.dependencies]
 python = "^3.12"
 
+[tool.poetry.scripts]
+sdxl-asset-manager = "src.cli:cli"
+
 [tool.mypy]
 python_version = "3.12"
 # Temporarily relaxed settings to unblock PR #11

@@ -41,15 +41,40 @@ cp .env.example .env
 
 ### CLI コマンド
 
-```bash
-# Notionからデータを同期
-python -m src.cli sync
+CLIは以下の方法で実行できます：
 
-# YAMLファイルから画像生成
-python -m src.cli gen path/to/prompt.yml
+#### 方法1: モジュールとして実行 (開発時)
+```bash
+# データベース初期化
+python -m src db init
+
+# YAMLファイルの処理
+python -m src yaml load path/to/prompt.yml
 
 # データベース検索
-python -m src.cli search "masterpiece 1girl"
+python -m src search "masterpiece 1girl"
+
+# データベースステータス確認
+python -m src db status
+```
+
+#### 方法2: インストール後のコマンド (本番運用)
+```bash
+# パッケージをインストール
+pip install -e .
+
+# コマンドとして実行
+sdxl-asset-manager db init
+sdxl-asset-manager yaml load path/to/prompt.yml
+sdxl-asset-manager search "masterpiece 1girl"
+sdxl-asset-manager db status
+```
+
+#### 方法3: 直接実行 (開発時)
+```bash
+# 直接Pythonファイルを実行
+python src/cli.py --help
+python src/cli.py db init
 ```
 
 ### データ構造
