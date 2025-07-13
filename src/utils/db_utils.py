@@ -88,7 +88,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = next(iter(model_class.__table__.primary_key.columns))
+            primary_key = next(iter(model_class.__table__.primary_key))
             return cast(
                 Optional[ModelType],
                 session.query(model_class).filter(primary_key == record_id).first()
@@ -154,7 +154,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = next(iter(model_class.__table__.primary_key.columns))
+            primary_key = next(iter(model_class.__table__.primary_key))
             record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
@@ -181,7 +181,7 @@ class DatabaseManager:
         """
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
-            primary_key = next(iter(model_class.__table__.primary_key.columns))
+            primary_key = next(iter(model_class.__table__.primary_key))
             record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
