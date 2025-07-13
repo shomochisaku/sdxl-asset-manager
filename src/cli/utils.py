@@ -271,7 +271,7 @@ def progress_bar(items, label: str = "処理中"):
     Yields:
         各アイテム
     """
-    with click.progressbar(items, label=label) as bar:
+    with click.progressbar(items, label=label) as bar:  # type: ignore[var-annotated]
         for item in bar:
             yield item
 

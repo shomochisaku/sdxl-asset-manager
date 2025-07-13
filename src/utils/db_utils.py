@@ -53,7 +53,7 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def create_record(self, model_class: type[ModelType], **kwargs) -> ModelType:
+    def create_record(self, model_class: Type[ModelType], **kwargs) -> ModelType:
         """新しいレコードを作成します.
         
         Args:
@@ -75,7 +75,7 @@ class DatabaseManager:
             return record
 
     def get_record_by_id(
-        self, model_class: type[ModelType], record_id: int
+        self, model_class: Type[ModelType], record_id: int
     ) -> Optional[ModelType]:
         """IDでレコードを取得します.
         
@@ -137,10 +137,10 @@ class DatabaseManager:
             records = query.all()
             for record in records:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
-            return cast(list[ModelType], records)
+            return cast(List[ModelType], records)
 
     def update_record(
-        self, model_class: type[ModelType], record_id: int, **kwargs
+        self, model_class: Type[ModelType], record_id: int, **kwargs
     ) -> Optional[ModelType]:
         """レコードを更新します.
         
@@ -170,7 +170,7 @@ class DatabaseManager:
                 return record
             return None
 
-    def delete_record(self, model_class: type[ModelType], record_id: int) -> bool:
+    def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
         """レコードを削除します.
         
         Args:

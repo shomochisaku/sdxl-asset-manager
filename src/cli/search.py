@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Optional
 
 import click
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from src.models.database import Model, Run, RunLora, RunTag, Tag
@@ -647,13 +647,13 @@ def stats(ctx: click.Context, output: str) -> None:
             # サンプラー別統計
             sampler_stats = session.query(
                 Run.sampler, 
-                session.query(Run).filter(Run.sampler == Run.sampler).count().label('count')
+                func.count().label('count')
             ).group_by(Run.sampler).order_by(desc('count')).limit(10).all()
             
             # CFG統計
             cfg_stats = session.query(
-                session.query(Run.cfg).label('cfg'),
-                session.query(Run).filter(Run.cfg == Run.cfg).count().label('count')
+                Run.cfg,
+                func.count().label('count')
             ).group_by(Run.cfg).order_by(desc('count')).limit(10).all()
         
         if output == 'table':
@@ -691,18 +691,18 @@ def stats(ctx: click.Context, output: str) -> None:
                 
         elif output == 'json':
             stats_data = {
-                'status_stats': dict(status_stats),
-                'model_stats': dict(model_stats),
-                'sampler_stats': dict(sampler_stats),
-                'cfg_stats': dict(cfg_stats)
+                'status_stats': {str(k): int(v) for k, v in status_stats},
+                'model_stats': {str(k): int(v) for k, v in model_stats},
+                'sampler_stats': {str(k): int(v) for k, v in sampler_stats},
+                'cfg_stats': {str(k): int(v) for k, v in cfg_stats}
             }
             output_json(stats_data)
         elif output == 'yaml':
             stats_data = {
-                'status_stats': dict(status_stats),
-                'model_stats': dict(model_stats),
-                'sampler_stats': dict(sampler_stats),
-                'cfg_stats': dict(cfg_stats)
+                'status_stats': {str(k): int(v) for k, v in status_stats},
+                'model_stats': {str(k): int(v) for k, v in model_stats},
+                'sampler_stats': {str(k): int(v) for k, v in sampler_stats},
+                'cfg_stats': {str(k): int(v) for k, v in cfg_stats}
             }
             output_yaml(stats_data)
             
