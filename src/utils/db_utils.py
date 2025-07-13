@@ -72,6 +72,7 @@ class DatabaseManager:
             session.add(record)
             session.flush()  # IDを取得するためにflush
             session.refresh(record)  # 最新の状態を取得
+            session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
             return record
 
     def get_record_by_id(
@@ -89,10 +90,10 @@ class DatabaseManager:
         with self.get_session() as session:
             # SQLAlchemy introspection to get primary key column
             primary_key = next(iter(model_class.__table__.primary_key))
-            return cast(
-                Optional[ModelType],
-                session.query(model_class).filter(primary_key == record_id).first()
-            )
+            record = session.query(model_class).filter(primary_key == record_id).first()
+            if record:
+                session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
+            return cast(Optional[ModelType], record)
 
     def get_records(
         self,
@@ -134,7 +135,10 @@ class DatabaseManager:
             if limit is not None:
                 query = query.limit(limit)
                 
-            return cast(List[ModelType], query.all())
+            records = query.all()
+            for record in records:
+                session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
+            return cast(List[ModelType], records)
 
     def update_record(
         self, model_class: Type[ModelType], record_id: int, **kwargs
@@ -163,6 +167,7 @@ class DatabaseManager:
                         setattr(record, key, value)
                 session.flush()
                 session.refresh(record)
+                session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
                 return record
             return None
 
@@ -229,12 +234,15 @@ def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
         最近の実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return (
+        records = (
             session.query(Run)
             .order_by(desc(Run.created_at))
             .limit(limit)
             .all()
         )
+        for record in records:
+            session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
+        return records
 
 
 def search_runs_by_prompt(
@@ -251,7 +259,7 @@ def search_runs_by_prompt(
         検索にマッチした実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return (
+        records = (
             session.query(Run)
             .filter(
                 or_(
@@ -263,6 +271,9 @@ def search_runs_by_prompt(
             .limit(limit)
             .all()
         )
+        for record in records:
+            session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
+        return records
 
 
 def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> List[Image]:
@@ -339,4 +350,5 @@ def create_run_with_loras(
 
         session.flush()
         session.refresh(run)
+        session.expunge(run)  # セッションから切り離してDetachedInstanceErrorを防ぐ
         return run
