@@ -143,7 +143,7 @@ class TestDatabaseModels:
             "height": 768,
             "file_size": 1024 * 1024,
             "hash": "abc123def456",
-            "metadata": '{"prompt": "test"}',
+            "image_metadata": '{"prompt": "test"}',
         }
         
         image = db_manager.create_record(Image, **image_data)

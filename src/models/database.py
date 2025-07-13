@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from sqlalchemy import (
     REAL,
@@ -20,10 +20,15 @@ from sqlalchemy import (
     event,
     func,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-Base = declarative_base()
+if TYPE_CHECKING:
+    pass
+
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base class."""
+    pass
 
 
 class Model(Base):
@@ -127,7 +132,7 @@ class Image(Base):
     height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     file_size: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     hash: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    image_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.current_timestamp(), nullable=False
     )
@@ -218,12 +223,12 @@ class RunTag(Base):
 
 # Auto-update triggers for updated_at fields
 @event.listens_for(Model, "before_update")
-def update_model_timestamp(mapper, connection, target):
+def update_model_timestamp(mapper: Any, connection: Any, target: Model) -> None:
     """Modelテーブルのupdated_atを自動更新します."""
     target.updated_at = datetime.utcnow()
 
 
 @event.listens_for(Run, "before_update")
-def update_run_timestamp(mapper, connection, target):
+def update_run_timestamp(mapper: Any, connection: Any, target: Run) -> None:
     """Runテーブルのupdated_atを自動更新します."""
     target.updated_at = datetime.utcnow()

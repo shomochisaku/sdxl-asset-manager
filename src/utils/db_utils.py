@@ -4,9 +4,9 @@
 """
 
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Type, TypeVar
+from typing import Any, Dict, Generator, List, Optional, Type, TypeVar, cast
 
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.models.database import Base, Image, Model, Run, RunLora, RunTag, Tag
 from src.utils.db_init import get_session_factory, initialize_database
 
-# TypeVarを定義してジェネリック型をサポート
+# TypeVarを定義してジェネリック型をサポート  
 ModelType = TypeVar("ModelType", bound=Base)
 
 
@@ -87,9 +87,12 @@ class DatabaseManager:
             レコードインスタンス（見つからない場合はNone）
         """
         with self.get_session() as session:
-            return session.query(model_class).filter(
-                getattr(model_class, f"{model_class.__tablename__.rstrip('s')}_id") == record_id
-            ).first()
+            # SQLAlchemy introspection to get primary key column
+            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            return cast(
+                Optional[ModelType],
+                session.query(model_class).filter(primary_key == record_id).first()
+            )
 
     def get_records(
         self,
@@ -131,7 +134,7 @@ class DatabaseManager:
             if limit is not None:
                 query = query.limit(limit)
                 
-            return query.all()
+            return cast(List[ModelType], query.all())
 
     def update_record(
         self, model_class: Type[ModelType], record_id: int, **kwargs
@@ -150,10 +153,9 @@ class DatabaseManager:
             SQLAlchemyError: データベース操作エラー
         """
         with self.get_session() as session:
-            id_field = f"{model_class.__tablename__.rstrip('s')}_id"
-            record = session.query(model_class).filter(
-                getattr(model_class, id_field) == record_id
-            ).first()
+            # SQLAlchemy introspection to get primary key column
+            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
                 for key, value in kwargs.items():
@@ -161,7 +163,7 @@ class DatabaseManager:
                         setattr(record, key, value)
                 session.flush()
                 session.refresh(record)
-                return record
+                return cast(Optional[ModelType], record)
             return None
 
     def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
@@ -178,10 +180,9 @@ class DatabaseManager:
             SQLAlchemyError: データベース操作エラー
         """
         with self.get_session() as session:
-            id_field = f"{model_class.__tablename__.rstrip('s')}_id"
-            record = session.query(model_class).filter(
-                getattr(model_class, id_field) == record_id
-            ).first()
+            # SQLAlchemy introspection to get primary key column
+            primary_key = list(model_class.__table__.primary_key.columns)[0]
+            record = session.query(model_class).filter(primary_key == record_id).first()
             
             if record:
                 session.delete(record)
@@ -228,7 +229,8 @@ def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
         最近の実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return (
+        return cast(
+            List[Run],
             session.query(Run)
             .order_by(desc(Run.created_at))
             .limit(limit)
@@ -250,7 +252,8 @@ def search_runs_by_prompt(
         検索にマッチした実行履歴リスト
     """
     with db_manager.get_session() as session:
-        return (
+        return cast(
+            List[Run],
             session.query(Run)
             .filter(
                 or_(
