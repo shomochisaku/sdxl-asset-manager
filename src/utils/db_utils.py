@@ -4,14 +4,13 @@
 """
 
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, Generator, Optional, TypeVar, cast
 
 from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.models.database import Base, Image, Model, Run, RunLora, RunTag, Tag
+from src.models.database import Base, Image, Model, Run, RunLora, RunTag
 from src.utils.db_init import get_session_factory, initialize_database
 
 # TypeVarを定義してジェネリック型をサポート  
@@ -40,7 +39,7 @@ class DatabaseManager:
         
         Yields:
             SQLAlchemy Session インスタンス
-            
+
         Raises:
             SQLAlchemyError: データベース操作エラー
         """
@@ -54,7 +53,7 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def create_record(self, model_class: Type[ModelType], **kwargs) -> ModelType:
+    def create_record(self, model_class: type[ModelType], **kwargs) -> ModelType:
         """新しいレコードを作成します.
         
         Args:
@@ -63,7 +62,7 @@ class DatabaseManager:
             
         Returns:
             作成されたレコードインスタンス
-            
+
         Raises:
             SQLAlchemyError: データベース操作エラー
         """
@@ -76,8 +75,8 @@ class DatabaseManager:
             return record
 
     def get_record_by_id(
-        self, model_class: Type[ModelType], record_id: int
-    ) -> Optional[ModelType]:
+        self, model_class: type[ModelType], record_id: int
+    ) -> ModelType | None:
         """IDでレコードを取得します.
         
         Args:
@@ -93,16 +92,16 @@ class DatabaseManager:
             record = session.query(model_class).filter(primary_key == record_id).first()
             if record:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
-            return cast(Optional[ModelType], record)
+            return cast(ModelType | None, record)
 
     def get_records(
         self,
-        model_class: Type[ModelType],
-        filters: Optional[Dict[str, Any]] = None,
-        order_by: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> List[ModelType]:
+        model_class: type[ModelType],
+        filters: dict[str, Any] | None = None,
+        order_by: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[ModelType]:
         """条件に基づいてレコードを取得します.
         
         Args:
@@ -138,11 +137,11 @@ class DatabaseManager:
             records = query.all()
             for record in records:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
-            return cast(List[ModelType], records)
+            return cast(list[ModelType], records)
 
     def update_record(
-        self, model_class: Type[ModelType], record_id: int, **kwargs
-    ) -> Optional[ModelType]:
+        self, model_class: type[ModelType], record_id: int, **kwargs
+    ) -> ModelType | None:
         """レコードを更新します.
         
         Args:
@@ -152,7 +151,7 @@ class DatabaseManager:
             
         Returns:
             更新されたレコードインスタンス（見つからない場合はNone）
-            
+
         Raises:
             SQLAlchemyError: データベース操作エラー
         """
@@ -160,7 +159,7 @@ class DatabaseManager:
             # SQLAlchemy introspection to get primary key column
             primary_key = next(iter(model_class.__table__.primary_key))
             record = session.query(model_class).filter(primary_key == record_id).first()
-            
+
             if record:
                 for key, value in kwargs.items():
                     if hasattr(record, key):
@@ -171,7 +170,7 @@ class DatabaseManager:
                 return record
             return None
 
-    def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
+    def delete_record(self, model_class: type[ModelType], record_id: int) -> bool:
         """レコードを削除します.
         
         Args:
@@ -180,7 +179,7 @@ class DatabaseManager:
             
         Returns:
             True: 削除成功、False: レコードが見つからない
-            
+
         Raises:
             SQLAlchemyError: データベース操作エラー
         """
@@ -188,7 +187,7 @@ class DatabaseManager:
             # SQLAlchemy introspection to get primary key column
             primary_key = next(iter(model_class.__table__.primary_key))
             record = session.query(model_class).filter(primary_key == record_id).first()
-            
+
             if record:
                 session.delete(record)
                 return True
@@ -197,7 +196,7 @@ class DatabaseManager:
 
 # 専用のヘルパー関数
 
-def get_models_by_type(db_manager: DatabaseManager, model_type: str) -> List[Model]:
+def get_models_by_type(db_manager: DatabaseManager, model_type: str) -> list[Model]:
     """タイプ別にモデルを取得します.
     
     Args:
@@ -210,7 +209,7 @@ def get_models_by_type(db_manager: DatabaseManager, model_type: str) -> List[Mod
     return db_manager.get_records(Model, filters={"type": model_type})
 
 
-def get_runs_by_status(db_manager: DatabaseManager, status: str) -> List[Run]:
+def get_runs_by_status(db_manager: DatabaseManager, status: str) -> list[Run]:
     """ステータス別に実行履歴を取得します.
     
     Args:
@@ -223,7 +222,7 @@ def get_runs_by_status(db_manager: DatabaseManager, status: str) -> List[Run]:
     return db_manager.get_records(Run, filters={"status": status})
 
 
-def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
+def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> list[Run]:
     """最近の実行履歴を取得します.
     
     Args:
@@ -247,7 +246,7 @@ def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
 
 def search_runs_by_prompt(
     db_manager: DatabaseManager, search_term: str, limit: int = 50
-) -> List[Run]:
+) -> list[Run]:
     """プロンプトで実行履歴を検索します.
     
     Args:
@@ -276,7 +275,7 @@ def search_runs_by_prompt(
         return records
 
 
-def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> List[Image]:
+def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> list[Image]:
     """指定された実行履歴の画像を取得します.
     
     Args:
@@ -289,7 +288,7 @@ def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> List[Image]:
     return db_manager.get_records(Image, filters={"run_id": run_id})
 
 
-def get_loras_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunLora]:
+def get_loras_for_run(db_manager: DatabaseManager, run_id: int) -> list[RunLora]:
     """指定された実行履歴のLoRA情報を取得します.
     
     Args:
@@ -302,7 +301,7 @@ def get_loras_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunLora]
     return db_manager.get_records(RunLora, filters={"run_id": run_id})
 
 
-def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunTag]:
+def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> list[RunTag]:
     """指定された実行履歴のタグ情報を取得します.
     
     Args:
@@ -317,8 +316,8 @@ def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunTag]:
 
 def create_run_with_loras(
     db_manager: DatabaseManager,
-    run_data: Dict[str, Any],
-    lora_configs: List[Dict[str, Any]],
+    run_data: dict[str, Any],
+    lora_configs: list[dict[str, Any]],
 ) -> Run:
     """LoRA設定付きの実行履歴を作成します.
     
@@ -329,7 +328,7 @@ def create_run_with_loras(
         
     Returns:
         作成された実行履歴インスタンス
-        
+
     Raises:
         SQLAlchemyError: データベース操作エラー
     """

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -233,7 +233,7 @@ class TestDatabaseInitialization:
         
         # 外部キー制約が有効かチェック
         with engine.connect() as conn:
-            result = conn.execute("PRAGMA foreign_keys")
+            result = conn.execute(text("PRAGMA foreign_keys"))
             assert result.fetchone()[0] == 1
 
     def test_verify_database_setup(self, db_manager):

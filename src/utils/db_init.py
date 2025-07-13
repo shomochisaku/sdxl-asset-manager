@@ -19,19 +19,19 @@ def get_database_path() -> str:
     
     Returns:
         データベースファイルの絶対パス
-        
+
     Raises:
         ValueError: DATABASE_PATHが設定されていない場合
     """
     db_path = os.getenv("DATABASE_PATH")
     if not db_path:
         raise ValueError("DATABASE_PATH environment variable is not set")
-    
+
     # 絶対パスに変換
     if not os.path.isabs(db_path):
         current_dir = os.getcwd()
         db_path = os.path.join(current_dir, db_path)
-    
+
     return db_path
 
 
@@ -54,13 +54,13 @@ def create_engine_for_database(db_path: Optional[str] = None) -> Engine:
         
     Returns:
         SQLAlchemy Engine インスタンス
-        
+
     Raises:
         ValueError: データベースパスが無効な場合
     """
     if db_path is None:
         db_path = get_database_path()
-    
+
     # データベースディレクトリを作成
     create_database_directory(db_path)
     
@@ -139,7 +139,7 @@ def initialize_database(db_path: Optional[str] = None) -> Engine:
         
     Returns:
         初期化されたSQLAlchemy Engine インスタンス
-        
+
     Raises:
         ValueError: データベース設定が無効な場合
         Exception: データベース初期化に失敗した場合
@@ -147,7 +147,7 @@ def initialize_database(db_path: Optional[str] = None) -> Engine:
     try:
         # エンジンを作成
         engine = create_engine_for_database(db_path)
-        
+
         # テーブルを作成
         create_tables(engine)
         
