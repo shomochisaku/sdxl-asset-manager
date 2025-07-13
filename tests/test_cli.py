@@ -59,7 +59,8 @@ class TestMainCLI:
     def test_cli_with_config_option(self, runner, temp_env_file):
         """--configオプションが正常に動作することをテストします."""
         with patch('src.cli.load_dotenv') as mock_load_dotenv:
-            result = runner.invoke(cli, ['--config', temp_env_file, '--help'])
+            # Use db --help to ensure CLI callback is executed
+            result = runner.invoke(cli, ['--config', temp_env_file, 'db', '--help'])
             assert result.exit_code == 0
             mock_load_dotenv.assert_called_once_with(temp_env_file)
 
@@ -95,7 +96,7 @@ class TestMainCLI:
                 f.write("TEST_VAR=auto_loaded\n")
             
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(cli, ['db', '--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_called_once()
 
@@ -104,7 +105,7 @@ class TestMainCLI:
         with runner.isolated_filesystem():
             # .envファイルが存在しない状態
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(cli, ['db', '--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_not_called()
 

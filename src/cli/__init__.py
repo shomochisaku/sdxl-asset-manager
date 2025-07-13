@@ -8,11 +8,13 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from dotenv import load_dotenv
 
 from .db import db_commands
 from .run import run_commands
 from .search import search_commands
 from .yaml_cmd import yaml_commands
+
 
 def setup_logging(verbose: bool = False, quiet: bool = False) -> None:
     """ログレベルを設定します.
@@ -86,10 +88,8 @@ def cli(
 
     # .envファイルを読み込み
     if config:
-        from dotenv import load_dotenv
         load_dotenv(config)
     elif Path('.env').exists():
-        from dotenv import load_dotenv
         load_dotenv()
 
 
