@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, List, Optional
 
 from sqlalchemy import (
@@ -51,8 +51,8 @@ class Model(Base):
     )
 
     # Relationships
-    runs: Mapped[List["Run"]] = relationship("Run", back_populates="model")
-    lora_runs: Mapped[List["RunLora"]] = relationship(
+    runs: Mapped[List[Run]] = relationship("Run", back_populates="model")
+    lora_runs: Mapped[List[RunLora]] = relationship(
         "RunLora", foreign_keys="RunLora.lora_id", back_populates="lora_model"
     )
 
@@ -63,7 +63,7 @@ class Model(Base):
 
 class Run(Base):
     """実行履歴テーブル.
-    
+
     画像生成の実行履歴とパラメータを管理します。
     """
 
@@ -96,14 +96,14 @@ class Run(Base):
     )
 
     # Relationships
-    model: Mapped[Optional["Model"]] = relationship("Model", back_populates="runs")
-    images: Mapped[List["Image"]] = relationship(
+    model: Mapped[Optional[Model]] = relationship("Model", back_populates="runs")
+    images: Mapped[List[Image]] = relationship(
         "Image", back_populates="run", cascade="all, delete-orphan"
     )
-    loras: Mapped[List["RunLora"]] = relationship(
+    loras: Mapped[List[RunLora]] = relationship(
         "RunLora", back_populates="run", cascade="all, delete-orphan"
     )
-    tags: Mapped[List["RunTag"]] = relationship(
+    tags: Mapped[List[RunTag]] = relationship(
         "RunTag", back_populates="run", cascade="all, delete-orphan"
     )
 
@@ -114,7 +114,7 @@ class Run(Base):
 
 class Image(Base):
     """生成画像テーブル.
-    
+
     実行履歴に紐づく生成画像の情報を管理します。
     """
 
@@ -136,7 +136,7 @@ class Image(Base):
     )
 
     # Relationships
-    run: Mapped["Run"] = relationship("Run", back_populates="images")
+    run: Mapped[Run] = relationship("Run", back_populates="images")
 
     def __repr__(self) -> str:
         """文字列表現を返します."""
@@ -145,7 +145,7 @@ class Image(Base):
 
 class Tag(Base):
     """タグテーブル.
-    
+
     実行履歴の分類用タグを管理します。
     """
 
@@ -159,7 +159,7 @@ class Tag(Base):
     )
 
     # Relationships
-    runs: Mapped[List["RunTag"]] = relationship(
+    runs: Mapped[List[RunTag]] = relationship(
         "RunTag", back_populates="tag", cascade="all, delete-orphan"
     )
 
@@ -170,7 +170,7 @@ class Tag(Base):
 
 class RunLora(Base):
     """実行履歴とLoRAの関連付けテーブル.
-    
+
     多対多の関係を管理します。
     """
 
@@ -185,8 +185,8 @@ class RunLora(Base):
     weight: Mapped[float] = mapped_column(REAL, default=1.0, nullable=False)
 
     # Relationships
-    run: Mapped["Run"] = relationship("Run", back_populates="loras")
-    lora_model: Mapped["Model"] = relationship(
+    run: Mapped[Run] = relationship("Run", back_populates="loras")
+    lora_model: Mapped[Model] = relationship(
         "Model", foreign_keys=[lora_id], back_populates="lora_runs"
     )
 
@@ -197,7 +197,7 @@ class RunLora(Base):
 
 class RunTag(Base):
     """実行履歴とタグの関連付けテーブル.
-    
+
     多対多の関係を管理します。
     """
 
@@ -211,8 +211,8 @@ class RunTag(Base):
     )
 
     # Relationships
-    run: Mapped["Run"] = relationship("Run", back_populates="tags")
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="runs")
+    run: Mapped[Run] = relationship("Run", back_populates="tags")
+    tag: Mapped[Tag] = relationship("Tag", back_populates="runs")
 
     def __repr__(self) -> str:
         """文字列表現を返します."""
@@ -223,10 +223,10 @@ class RunTag(Base):
 @event.listens_for(Model, "before_update")
 def update_model_timestamp(mapper: Any, connection: Any, target: Model) -> None:
     """Modelテーブルのupdated_atを自動更新します."""
-    target.updated_at = datetime.utcnow()
+    target.updated_at = datetime.now(timezone.utc)
 
 
 @event.listens_for(Run, "before_update")
 def update_run_timestamp(mapper: Any, connection: Any, target: Run) -> None:
     """Runテーブルのupdated_atを自動更新します."""
-    target.updated_at = datetime.utcnow()
+    target.updated_at = datetime.now(timezone.utc)

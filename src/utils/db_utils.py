@@ -3,8 +3,9 @@
 このモジュールは接続管理、セッション管理、基本的なCRUD操作を提供します。
 """
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
@@ -13,20 +14,20 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.models.database import Base, Image, Model, Run, RunLora, RunTag
 from src.utils.db_init import get_session_factory, initialize_database
 
-# TypeVarを定義してジェネリック型をサポート  
+# TypeVarを定義してジェネリック型をサポート
 ModelType = TypeVar("ModelType", bound=Base)
 
 
 class DatabaseManager:
     """データベース管理クラス.
-    
+
     エンジンとセッションファクトリを管理し、データベース操作の
     コンテキストマネージャとユーティリティメソッドを提供します。
     """
 
     def __init__(self, db_path: Optional[str] = None):
         """DatabaseManagerを初期化します.
-        
+
         Args:
             db_path: データベースファイルのパス（Noneの場合は環境変数から取得）
         """
@@ -36,7 +37,7 @@ class DatabaseManager:
     @contextmanager
     def get_session(self) -> Generator[Session, None, None]:
         """データベースセッションのコンテキストマネージャ.
-        
+
         Yields:
             SQLAlchemy Session インスタンス
 
@@ -55,11 +56,11 @@ class DatabaseManager:
 
     def create_record(self, model_class: Type[ModelType], **kwargs) -> ModelType:
         """新しいレコードを作成します.
-        
+
         Args:
             model_class: モデルクラス
             **kwargs: レコードの属性
-            
+
         Returns:
             作成されたレコードインスタンス
 
@@ -78,11 +79,11 @@ class DatabaseManager:
         self, model_class: Type[ModelType], record_id: int
     ) -> Optional[ModelType]:
         """IDでレコードを取得します.
-        
+
         Args:
             model_class: モデルクラス
             record_id: レコードID
-            
+
         Returns:
             レコードインスタンス（見つからない場合はNone）
         """
@@ -103,37 +104,37 @@ class DatabaseManager:
         offset: Optional[int] = None,
     ) -> List[ModelType]:
         """条件に基づいてレコードを取得します.
-        
+
         Args:
             model_class: モデルクラス
             filters: フィルタ条件の辞書
             order_by: ソート用カラム名
             limit: 取得件数制限
             offset: オフセット
-            
+
         Returns:
             レコードインスタンスのリスト
         """
         with self.get_session() as session:
             query = session.query(model_class)
-            
+
             # フィルタを適用
             if filters:
                 for key, value in filters.items():
                     if hasattr(model_class, key):
                         query = query.filter(getattr(model_class, key) == value)
-            
+
             # ソートを適用
             if order_by:
                 if hasattr(model_class, order_by):
                     query = query.order_by(getattr(model_class, order_by))
-            
+
             # ページネーションを適用
             if offset is not None:
                 query = query.offset(offset)
             if limit is not None:
                 query = query.limit(limit)
-                
+
             records = query.all()
             for record in records:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
@@ -143,12 +144,12 @@ class DatabaseManager:
         self, model_class: Type[ModelType], record_id: int, **kwargs
     ) -> Optional[ModelType]:
         """レコードを更新します.
-        
+
         Args:
             model_class: モデルクラス
             record_id: レコードID
             **kwargs: 更新する属性
-            
+
         Returns:
             更新されたレコードインスタンス（見つからない場合はNone）
 
@@ -172,11 +173,11 @@ class DatabaseManager:
 
     def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
         """レコードを削除します.
-        
+
         Args:
             model_class: モデルクラス
             record_id: レコードID
-            
+
         Returns:
             True: 削除成功、False: レコードが見つからない
 
@@ -196,39 +197,39 @@ class DatabaseManager:
 
 # 専用のヘルパー関数
 
-def get_models_by_type(db_manager: DatabaseManager, model_type: str) -> list[Model]:
+def get_models_by_type(db_manager: DatabaseManager, model_type: str) -> List[Model]:
     """タイプ別にモデルを取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         model_type: モデルタイプ（checkpoint, lora, vae, controlnet）
-        
+
     Returns:
         指定されたタイプのモデルリスト
     """
     return db_manager.get_records(Model, filters={"type": model_type})
 
 
-def get_runs_by_status(db_manager: DatabaseManager, status: str) -> list[Run]:
+def get_runs_by_status(db_manager: DatabaseManager, status: str) -> List[Run]:
     """ステータス別に実行履歴を取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         status: ステータス（Purchased, Tried, Tuned, Final）
-        
+
     Returns:
         指定されたステータスの実行履歴リスト
     """
     return db_manager.get_records(Run, filters={"status": status})
 
 
-def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> list[Run]:
+def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> List[Run]:
     """最近の実行履歴を取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         limit: 取得件数
-        
+
     Returns:
         最近の実行履歴リスト
     """
@@ -246,14 +247,14 @@ def get_recent_runs(db_manager: DatabaseManager, limit: int = 10) -> list[Run]:
 
 def search_runs_by_prompt(
     db_manager: DatabaseManager, search_term: str, limit: int = 50
-) -> list[Run]:
+) -> List[Run]:
     """プロンプトで実行履歴を検索します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         search_term: 検索キーワード
         limit: 取得件数制限
-        
+
     Returns:
         検索にマッチした実行履歴リスト
     """
@@ -275,39 +276,39 @@ def search_runs_by_prompt(
         return records
 
 
-def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> list[Image]:
+def get_images_for_run(db_manager: DatabaseManager, run_id: int) -> List[Image]:
     """指定された実行履歴の画像を取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         run_id: 実行履歴ID
-        
+
     Returns:
         指定された実行履歴の画像リスト
     """
     return db_manager.get_records(Image, filters={"run_id": run_id})
 
 
-def get_loras_for_run(db_manager: DatabaseManager, run_id: int) -> list[RunLora]:
+def get_loras_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunLora]:
     """指定された実行履歴のLoRA情報を取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         run_id: 実行履歴ID
-        
+
     Returns:
         指定された実行履歴のLoRA関連付けリスト
     """
     return db_manager.get_records(RunLora, filters={"run_id": run_id})
 
 
-def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> list[RunTag]:
+def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> List[RunTag]:
     """指定された実行履歴のタグ情報を取得します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         run_id: 実行履歴ID
-        
+
     Returns:
         指定された実行履歴のタグ関連付けリスト
     """
@@ -316,16 +317,16 @@ def get_tags_for_run(db_manager: DatabaseManager, run_id: int) -> list[RunTag]:
 
 def create_run_with_loras(
     db_manager: DatabaseManager,
-    run_data: dict[str, Any],
-    lora_configs: list[dict[str, Any]],
+    run_data: Dict[str, Any],
+    lora_configs: List[Dict[str, Any]],
 ) -> Run:
     """LoRA設定付きの実行履歴を作成します.
-    
+
     Args:
         db_manager: DatabaseManagerインスタンス
         run_data: 実行履歴データ
         lora_configs: LoRA設定のリスト [{"lora_id": int, "weight": float}, ...]
-        
+
     Returns:
         作成された実行履歴インスタンス
 

@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
-from src.cli import cli
+import src.cli
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ class TestMainCLI:
 
     def test_cli_help(self, runner):
         """CLIヘルプが正常に表示されることをテストします."""
-        result = runner.invoke(cli, ['--help'])
+        result = runner.invoke(src.cli.cli, ['--help'])
         assert result.exit_code == 0
         assert 'SDXL Asset Manager' in result.output
         assert '--config' in result.output
@@ -59,28 +59,28 @@ class TestMainCLI:
     def test_cli_with_config_option(self, runner, temp_env_file):
         """--configオプションが正常に動作することをテストします."""
         with patch('src.cli.load_dotenv') as mock_load_dotenv:
-            result = runner.invoke(cli, ['--config', temp_env_file, '--help'])
+            result = runner.invoke(src.cli.cli, ['--config', temp_env_file, '--help'])
             assert result.exit_code == 0
             mock_load_dotenv.assert_called_once_with(temp_env_file)
 
     def test_cli_with_db_option(self, runner, temp_db):
         """--dbオプションが正常に動作することをテストします."""
-        result = runner.invoke(cli, ['--db', temp_db, '--help'])
+        result = runner.invoke(src.cli.cli, ['--db', temp_db, '--help'])
         assert result.exit_code == 0
 
     def test_cli_verbose_option(self, runner):
         """--verboseオプションが正常に動作することをテストします."""
-        result = runner.invoke(cli, ['--verbose', '--help'])
+        result = runner.invoke(src.cli.cli, ['--verbose', '--help'])
         assert result.exit_code == 0
 
     def test_cli_quiet_option(self, runner):
         """--quietオプションが正常に動作することをテストします."""
-        result = runner.invoke(cli, ['--quiet', '--help'])
+        result = runner.invoke(src.cli.cli, ['--quiet', '--help'])
         assert result.exit_code == 0
 
     def test_cli_subcommands_available(self, runner):
         """サブコマンドが利用可能であることをテストします."""
-        result = runner.invoke(cli, ['--help'])
+        result = runner.invoke(src.cli.cli, ['--help'])
         assert result.exit_code == 0
         assert 'db' in result.output
         assert 'yaml' in result.output
@@ -95,7 +95,7 @@ class TestMainCLI:
                 f.write("TEST_VAR=auto_loaded\n")
             
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(src.cli.cli, ['--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_called_once()
 
@@ -104,7 +104,7 @@ class TestMainCLI:
         with runner.isolated_filesystem():
             # .envファイルが存在しない状態
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(src.cli.cli, ['--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_not_called()
 
@@ -115,21 +115,21 @@ class TestCLIErrorHandling:
     def test_handle_click_exception(self, runner):
         """Clickエラーの処理をテストします."""
         # 無効なサブコマンドを指定
-        result = runner.invoke(cli, ['invalid-command'])
+        result = runner.invoke(src.cli.cli, ['invalid-command'])
         assert result.exit_code != 0
         assert 'No such command' in result.output
 
     def test_handle_file_not_found_error(self, runner):
         """ファイルが見つからないエラーの処理をテストします."""
         # 存在しない設定ファイルを指定
-        result = runner.invoke(cli, ['--config', '/nonexistent/file.env', '--help'])
+        result = runner.invoke(src.cli.cli, ['--config', '/nonexistent/file.env', '--help'])
         # Click自体が存在チェックするため、エラーが発生する
         assert result.exit_code != 0
 
     def test_verbose_error_output(self, runner):
         """--verboseでの詳細エラー出力をテストします."""
         # データベース関連のエラーを発生させるため、無効なDBパスを使用
-        result = runner.invoke(cli, ['--verbose', 'db', 'status'])
+        result = runner.invoke(src.cli.cli, ['--verbose', 'db', 'status'])
         # エラーが発生するが、適切に処理されることを確認
         # 具体的なエラーメッセージはテストしない（環境依存のため）
         assert result.exit_code in [0, 1, 2, 3]  # 有効な終了コード
@@ -199,7 +199,7 @@ class TestCLIContext:
             click.echo(f"verbose: {ctx.obj.get('verbose')}")
             click.echo(f"quiet: {ctx.obj.get('quiet')}")
         
-        result = runner.invoke(cli, [
+        result = runner.invoke(src.cli.cli, [
             '--db', temp_db,
             '--verbose',
             'test-context'
@@ -211,7 +211,7 @@ class TestCLIContext:
 
     def test_global_options_propagation(self, runner, temp_db):
         """グローバルオプションの伝播をテストします."""
-        result = runner.invoke(cli, [
+        result = runner.invoke(src.cli.cli, [
             '--db', temp_db,
             '--verbose',
             'db', '--help'
@@ -226,17 +226,17 @@ class TestCLIIntegration:
     def test_full_cli_flow(self, runner, temp_db):
         """完全なCLIフローをテストします."""
         # データベース初期化
-        result = runner.invoke(cli, ['--db', temp_db, 'db', 'init', '--force'])
+        result = runner.invoke(src.cli.cli, ['--db', temp_db, 'db', 'init', '--force'])
         assert result.exit_code == 0
         
         # データベースステータス確認
-        result = runner.invoke(cli, ['--db', temp_db, 'db', 'status'])
+        result = runner.invoke(src.cli.cli, ['--db', temp_db, 'db', 'status'])
         assert result.exit_code == 0
 
     def test_error_recovery(self, runner):
         """エラー回復のテストをします."""
         # 無効なDBパスでコマンド実行
-        result = runner.invoke(cli, [
+        result = runner.invoke(src.cli.cli, [
             '--db', '/invalid/path/db.sqlite',
             'db', 'status'
         ])
@@ -246,13 +246,13 @@ class TestCLIIntegration:
     def test_help_system(self, runner):
         """ヘルプシステムの動作をテストします."""
         # メインヘルプ
-        result = runner.invoke(cli, ['--help'])
+        result = runner.invoke(src.cli.cli, ['--help'])
         assert result.exit_code == 0
         assert 'SDXL Asset Manager' in result.output
         
         # サブコマンドヘルプ
         for subcommand in ['db', 'yaml', 'search', 'run']:
-            result = runner.invoke(cli, [subcommand, '--help'])
+            result = runner.invoke(src.cli.cli, [subcommand, '--help'])
             assert result.exit_code == 0
             assert subcommand in result.output.lower()
 

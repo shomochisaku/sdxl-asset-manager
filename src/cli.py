@@ -3,7 +3,6 @@
 このモジュールはSDXL Asset Managerのメインコマンドラインインターフェースを提供します。
 """
 
-import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -18,20 +17,20 @@ from src.cli.yaml_cmd import yaml_commands
 
 def setup_logging(verbose: bool = False, quiet: bool = False) -> None:
     """ログレベルを設定します.
-    
+
     Args:
         verbose: 詳細ログを有効にする
         quiet: 警告以上のみ表示
     """
     import logging
-    
+
     if quiet:
         level = logging.WARNING
     elif verbose:
         level = logging.DEBUG
     else:
         level = logging.INFO
-    
+
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
@@ -71,21 +70,21 @@ def cli(
     quiet: bool
 ) -> None:
     """SDXL Asset Manager - 画像生成ワークフロー統合管理システム.
-    
+
     データベース操作、YAML処理、検索機能などの基本コマンドを提供します。
     """
     # ログ設定
     setup_logging(verbose, quiet)
-    
+
     # コンテキストオブジェクトを初期化
     ctx.ensure_object(dict)
-    
+
     # グローバル設定を保存
     ctx.obj['config_path'] = config
     ctx.obj['db_path'] = db
     ctx.obj['verbose'] = verbose
     ctx.obj['quiet'] = quiet
-    
+
     # .envファイルを読み込み
     if config:
         from dotenv import load_dotenv
@@ -97,15 +96,15 @@ def cli(
 
 def handle_error(error: Exception, exit_code: int = 1) -> None:
     """エラーを処理して適切な終了コードで終了します.
-    
+
     Args:
         error: 処理するエラー
         exit_code: 終了コード
     """
     import logging
-    
+
     logger = logging.getLogger(__name__)
-    
+
     if isinstance(error, click.ClickException):
         # Clickエラーはそのまま表示
         error.show()
@@ -115,12 +114,12 @@ def handle_error(error: Exception, exit_code: int = 1) -> None:
         sys.exit(3)  # ファイルエラー
     else:
         logger.error(f"予期しないエラーが発生しました: {error}")
-        
+
         # --verboseが有効な場合はスタックトレースを表示
         if '--verbose' in sys.argv or '-v' in sys.argv:
             import traceback
             logger.debug(traceback.format_exc())
-        
+
         sys.exit(exit_code)
 
 

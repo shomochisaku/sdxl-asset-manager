@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from sqlalchemy import Index, create_engine, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -16,7 +16,7 @@ from src.models.database import Base
 
 def get_database_path() -> str:
     """環境変数からデータベースパスを取得します.
-    
+
     Returns:
         データベースファイルの絶対パス
 
@@ -37,7 +37,7 @@ def get_database_path() -> str:
 
 def create_database_directory(db_path: str) -> None:
     """データベースファイル用のディレクトリを作成します.
-    
+
     Args:
         db_path: データベースファイルのパス
     """
@@ -48,10 +48,10 @@ def create_database_directory(db_path: str) -> None:
 
 def create_engine_for_database(db_path: Optional[str] = None) -> Engine:
     """SQLAlchemyエンジンを作成します.
-    
+
     Args:
         db_path: データベースファイルのパス（Noneの場合は環境変数から取得）
-        
+
     Returns:
         SQLAlchemy Engine インスタンス
 
@@ -63,28 +63,28 @@ def create_engine_for_database(db_path: Optional[str] = None) -> Engine:
 
     # データベースディレクトリを作成
     create_database_directory(db_path)
-    
+
     # SQLite接続文字列を作成
     database_url = f"sqlite:///{db_path}"
-    
+
     # エンジンを作成（外部キー制約を有効化）
     engine = create_engine(
         database_url,
         echo=False,  # SQLログを無効化（本番環境用）
         connect_args={"check_same_thread": False}  # SQLiteのスレッド制限を無効化
     )
-    
+
     # 外部キー制約を有効化
     with engine.connect() as conn:
         conn.execute(text("PRAGMA foreign_keys=ON"))
         conn.commit()
-    
+
     return engine
 
 
 def create_tables(engine: Engine) -> None:
     """データベーステーブルを作成します.
-    
+
     Args:
         engine: SQLAlchemy Engine インスタンス
     """
@@ -94,7 +94,7 @@ def create_tables(engine: Engine) -> None:
 
 def create_indexes(engine: Engine) -> None:
     """データベースインデックスを作成します.
-    
+
     Args:
         engine: SQLAlchemy Engine インスタンス
     """
@@ -106,7 +106,7 @@ def create_indexes(engine: Engine) -> None:
         "CREATE INDEX IF NOT EXISTS idx_images_run_id ON images(run_id)",
         "CREATE INDEX IF NOT EXISTS idx_images_hash ON images(hash)",
     ]
-    
+
     with engine.connect() as conn:
         for index_sql in indexes:
             conn.execute(text(index_sql))
@@ -115,11 +115,11 @@ def create_indexes(engine: Engine) -> None:
 
 def create_triggers(engine: Engine) -> None:
     """データベーストリガーを作成します.
-    
+
     Note:
         SQLAlchemyのeventシステムでupdated_atの自動更新を実装しているため、
         このメソッドは将来の拡張用として空実装にしています。
-    
+
     Args:
         engine: SQLAlchemy Engine インスタンス
     """
@@ -130,13 +130,13 @@ def create_triggers(engine: Engine) -> None:
 
 def initialize_database(db_path: Optional[str] = None) -> Engine:
     """データベースを初期化します.
-    
+
     この関数はテーブル、インデックス、トリガーを作成し、
     完全に設定されたデータベースを準備します。
-    
+
     Args:
         db_path: データベースファイルのパス（Noneの場合は環境変数から取得）
-        
+
     Returns:
         初期化されたSQLAlchemy Engine インスタンス
 
@@ -150,25 +150,25 @@ def initialize_database(db_path: Optional[str] = None) -> Engine:
 
         # テーブルを作成
         create_tables(engine)
-        
+
         # インデックスを作成
         create_indexes(engine)
-        
+
         # トリガーを作成（現在は空実装）
         create_triggers(engine)
-        
+
         return engine
-        
+
     except Exception as e:
         raise Exception(f"Database initialization failed: {e}") from e
 
 
 def get_session_factory(engine: Engine) -> sessionmaker[Session]:
     """セッションファクトリを作成します.
-    
+
     Args:
         engine: SQLAlchemy Engine インスタンス
-        
+
     Returns:
         セッションファクトリ
     """
@@ -177,10 +177,10 @@ def get_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 def verify_database_setup(engine: Engine) -> bool:
     """データベースのセットアップを検証します.
-    
+
     Args:
         engine: SQLAlchemy Engine インスタンス
-        
+
     Returns:
         True: セットアップが正常
         False: セットアップに問題がある
@@ -190,13 +190,13 @@ def verify_database_setup(engine: Engine) -> bool:
         with engine.connect() as conn:
             tables = [
                 "models",
-                "runs", 
+                "runs",
                 "images",
                 "tags",
                 "run_loras",
                 "run_tags"
             ]
-            
+
             for table in tables:
                 result = conn.execute(
                     text("SELECT name FROM sqlite_master WHERE type='table' AND name=:table"),
@@ -204,7 +204,7 @@ def verify_database_setup(engine: Engine) -> bool:
                 )
                 if not result.fetchone():
                     return False
-            
+
             # 外部キー制約が有効かを確認
             result = conn.execute(text("PRAGMA foreign_keys"))
             row = result.fetchone()
@@ -213,8 +213,8 @@ def verify_database_setup(engine: Engine) -> bool:
             foreign_keys_enabled = row[0]
             if not foreign_keys_enabled:
                 return False
-                
+
         return True
-        
+
     except Exception:
         return False
