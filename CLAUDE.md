@@ -110,6 +110,114 @@ Claude GitHub Appを使用するには、**リポジトリ個別でのインス�
 # - PR自動作成
 ```
 
+#### 4. Bash Permission許可とPR作成の指示方法
+
+**🚨 重要**: Claude GitHub AppがBash Permission（git、テスト実行、PR作成）を必要とする場合の対応方法
+
+##### Bash Permission許可
+Claude GitHub AppがBash Permissionを求めているとき：
+
+```bash
+# Issue コメントで以下の形式で許可
+@claude bash permission許可します。
+
+--allowedTools bash
+
+最終確認とPR作成を完了してください。
+```
+
+##### 効果的な@claude指示文の書き方
+
+**✅ 推奨パターン**:
+```bash
+@claude 以下のタスクを実装してください：
+
+## 実装内容
+- 具体的なタスク1
+- 具体的なタスク2
+
+## 技術要件
+- Python 3.9+互換性を維持
+- 既存テストが通ること
+- CI が完全にパスする状態
+
+## 期待する成果物
+- PR作成まで完了
+- テスト実行確認済み
+
+よろしくお願いします！
+```
+
+**❌ 避けるべきパターン**:
+```bash
+# 曖昧すぎる指示
+@claude よろしく
+
+# 技術要件が不明確
+@claude 何とかして
+```
+
+##### PR作成が失敗した場合の対処法
+
+Claude GitHub AppがPR作成に失敗した場合：
+
+1. **ブランチ確認**
+   ```bash
+   git fetch --all
+   git branch -r | grep "claude/"
+   ```
+
+2. **手動PR作成**
+   ```bash
+   gh pr create --base main --head "claude/issue-X-YYYYMMDD_HHMMSS" \
+     --title "適切なタイトル" \
+     --body "PRの説明"
+   ```
+
+3. **Issue更新**
+   - 手動PR作成完了をIssueにコメント
+   - PRリンクを明記
+
+##### 実際の運用事例（Issue #15）
+
+**成功事例**: コード品質改善タスクでの完全自動化
+
+```bash
+# 初回指示（具体的な要件を明記）
+@claude Issue#15のコード品質改善で以下の緊急対応が必要です。
+
+🚨 緊急修正項目
+1. Python 3.9互換性エラー（最優先）
+2. Ruff スタイルエラー（247件）
+3. pyproject.toml設定警告
+
+実行確認コマンド:
+- python3 -m mypy src/ (Success: no issues found)
+- python3 -m pytest (テスト実行可能)  
+- python3 -m ruff check src/ --statistics (エラー0件)
+
+CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持してください。
+
+# Bash Permission許可
+@claude bash permission許可します。
+
+--allowedTools bash
+
+最終確認とPR作成を完了してください。
+```
+
+**結果**: 
+- ✅ 9箇所のPython 3.9互換性修正
+- ✅ 2箇所のdatetime非推奨警告修正
+- ✅ CI ruffチェック再有効化
+- ✅ ブランチ作成・コミット・プッシュ完了
+- ❌ PR自動作成失敗（手動でPR #16作成）
+
+**学習ポイント**:
+- 具体的で明確な指示が効果的
+- Bash Permission許可は別コメントで実行
+- PR作成失敗時の手動対応手順が重要
+
 #### ❌ 間違った方法（動作しない）
 - GitHub Apps画面からの手動インストール
 - 手動でのワークフロー作成
