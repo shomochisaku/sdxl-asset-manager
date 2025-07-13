@@ -3,7 +3,7 @@
 このモジュールは実行履歴の一覧表示、詳細表示、更新、削除機能を提供します。
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import click
 from sqlalchemy import desc
@@ -106,7 +106,7 @@ def list(
         db_manager = state.db_manager
         
         # フィルタ条件を構築
-        filters = {}
+        filters: dict[str, Any] = {}
         if status:
             # 複数ステータスの場合は、ここではFilteringできないので後でSQLクエリで対応
             pass
@@ -384,9 +384,9 @@ def update(
         if negative is not None:
             updates['negative'] = negative
         if cfg is not None:
-            updates['cfg'] = cfg
+            updates['cfg'] = str(cfg)
         if steps is not None:
-            updates['steps'] = steps
+            updates['steps'] = str(steps)
         if source is not None:
             updates['source'] = source
         

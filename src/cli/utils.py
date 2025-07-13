@@ -286,13 +286,14 @@ class CliState:
             ctx: Click コンテキスト
         """
         self.ctx = ctx
-        self._db_manager = None
+        self._db_manager: Optional[DatabaseManager] = None
     
     @property
     def db_manager(self) -> DatabaseManager:
         """DatabaseManager インスタンスを取得します."""
         if self._db_manager is None:
             self._db_manager = get_database_manager(self.ctx)
+        assert self._db_manager is not None
         return self._db_manager
     
     @property
