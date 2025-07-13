@@ -4,7 +4,7 @@
 """
 
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Optional, TypeVar, cast
+from typing import Any, Dict, Generator, List, Optional, Type, TypeVar, cast
 
 from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
@@ -53,7 +53,7 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def create_record(self, model_class: type[ModelType], **kwargs) -> ModelType:
+    def create_record(self, model_class: Type[ModelType], **kwargs) -> ModelType:
         """新しいレコードを作成します.
         
         Args:
@@ -75,8 +75,8 @@ class DatabaseManager:
             return record
 
     def get_record_by_id(
-        self, model_class: type[ModelType], record_id: int
-    ) -> ModelType | None:
+        self, model_class: Type[ModelType], record_id: int
+    ) -> Optional[ModelType]:
         """IDでレコードを取得します.
         
         Args:
@@ -92,16 +92,16 @@ class DatabaseManager:
             record = session.query(model_class).filter(primary_key == record_id).first()
             if record:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
-            return cast(ModelType | None, record)
+            return cast(Optional[ModelType], record)
 
     def get_records(
         self,
-        model_class: type[ModelType],
-        filters: dict[str, Any] | None = None,
-        order_by: str | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[ModelType]:
+        model_class: Type[ModelType],
+        filters: Optional[Dict[str, Any]] = None,
+        order_by: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[ModelType]:
         """条件に基づいてレコードを取得します.
         
         Args:
@@ -137,11 +137,11 @@ class DatabaseManager:
             records = query.all()
             for record in records:
                 session.expunge(record)  # セッションから切り離してDetachedInstanceErrorを防ぐ
-            return cast(list[ModelType], records)
+            return cast(List[ModelType], records)
 
     def update_record(
-        self, model_class: type[ModelType], record_id: int, **kwargs
-    ) -> ModelType | None:
+        self, model_class: Type[ModelType], record_id: int, **kwargs
+    ) -> Optional[ModelType]:
         """レコードを更新します.
         
         Args:
@@ -170,7 +170,7 @@ class DatabaseManager:
                 return record
             return None
 
-    def delete_record(self, model_class: type[ModelType], record_id: int) -> bool:
+    def delete_record(self, model_class: Type[ModelType], record_id: int) -> bool:
         """レコードを削除します.
         
         Args:

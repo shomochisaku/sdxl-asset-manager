@@ -104,23 +104,50 @@ sdxl-asset-manager/
 
 ## 使い方
 
-### CLI コマンド（実装予定）
+### CLI コマンド ✅ 実装完了
 
+CLIは以下の方法で実行できます：
+
+#### 方法1: モジュールとして実行 (開発時)
 ```bash
 # データベース初期化
-sdxl-manager db init
+python -m src db init
 
-# YAMLファイル読み込み
-sdxl-manager yaml load data/yamls/ --recursive
+# YAMLファイルの処理
+python -m src yaml load data/yamls/ --recursive
 
-# プロンプト検索
-sdxl-manager search "masterpiece 1girl" --type prompt
+# データベース検索
+python -m src search prompt "masterpiece 1girl" --limit 10
 
 # 実行履歴表示
-sdxl-manager run list --status Final
+python -m src run list --status Final
+
+# データベースステータス確認
+python -m src db status
 ```
 
-**注意**: CLI機能は現在実装中です（Issue #13）。完成までは直接Pythonモジュールを使用してください。
+#### 方法2: インストール後のコマンド (本番運用)
+```bash
+# パッケージをインストール
+pip install -e .
+
+# コマンドとして実行
+sdxl-asset-manager db init
+sdxl-asset-manager yaml load data/yamls/ --recursive
+sdxl-asset-manager search prompt "masterpiece 1girl" 
+sdxl-asset-manager run list --status Final
+sdxl-asset-manager db status
+```
+
+#### 方法3: 直接実行 (開発時)
+```bash
+# 直接Pythonファイルを実行
+python src/cli.py --help
+python src/cli.py db init
+python src/cli.py yaml validate data/yamls/
+```
+
+**✅ CLI機能実装済み (PR #14)**
 
 ### データ構造
 
