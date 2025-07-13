@@ -104,10 +104,6 @@ def list(
     try:
         db_manager = state.db_manager
 
-        if status:
-            # 複数ステータスの場合は、ここではFilteringできないので後でSQLクエリで対応
-            pass
-
         with db_manager.get_session() as session:
             query_obj = session.query(Run)
 
