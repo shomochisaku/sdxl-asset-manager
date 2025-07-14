@@ -17,12 +17,14 @@ from src.cli import cli
 @pytest.fixture
 def temp_db():
     """テスト用の一時データベースファイルを提供します."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
-        db_path = tmp_file.name
+    # ファイルを作成せず、パスだけを生成
+    temp_dir = tempfile.mkdtemp()
+    db_path = os.path.join(temp_dir, "test.db")
     yield db_path
     # クリーンアップ
-    if os.path.exists(db_path):
-        os.unlink(db_path)
+    if os.path.exists(temp_dir):
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
@@ -145,8 +147,11 @@ class TestCLILogging:
         from src.cli import setup_logging
         import logging
         
-        setup_logging()
+        # ロガーをリセット
         logger = logging.getLogger()
+        logger.setLevel(logging.WARNING)  # デフォルト状態にリセット
+        
+        setup_logging()
         assert logger.level == logging.INFO
 
     def test_setup_logging_verbose(self):
@@ -154,8 +159,11 @@ class TestCLILogging:
         from src.cli import setup_logging
         import logging
         
-        setup_logging(verbose=True)
+        # ロガーをリセット
         logger = logging.getLogger()
+        logger.setLevel(logging.WARNING)  # デフォルト状態にリセット
+        
+        setup_logging(verbose=True)
         assert logger.level == logging.DEBUG
 
     def test_setup_logging_quiet(self):
@@ -193,7 +201,7 @@ class TestCLIContext:
         """コンテキストオブジェクトの初期化をテストします."""
         # カスタムコマンドを使ってコンテキストをテスト
         @cli.command()
-        @pytest.mark.click.pass_context
+        @click.pass_context
         def test_context(ctx):
             """テスト用コマンド."""
             click.echo(f"config_path: {ctx.obj.get('config_path')}")

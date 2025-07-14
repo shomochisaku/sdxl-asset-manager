@@ -35,7 +35,8 @@ def setup_logging(verbose: bool = False, quiet: bool = False) -> None:
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        force=True  # 既存の設定を上書き
     )
 
 

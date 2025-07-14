@@ -20,12 +20,13 @@ from src.utils.db_utils import DatabaseManager
 @pytest.fixture
 def temp_db():
     """テスト用の一時データベースファイルを提供します."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
-        db_path = tmp_file.name
+    # ファイルを作成せず、パスだけを生成
+    temp_dir = tempfile.mkdtemp()
+    db_path = os.path.join(temp_dir, "test.db")
     yield db_path
     # クリーンアップ
-    if os.path.exists(db_path):
-        os.unlink(db_path)
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
