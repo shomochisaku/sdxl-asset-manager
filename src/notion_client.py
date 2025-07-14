@@ -147,8 +147,11 @@ class NotionClient:
                 # Apply rate limiting
                 await self.rate_limiter.wait_if_needed()
 
-                # Get the method from client
-                client_method = getattr(self.client, method)
+                # Get the method from client using dotted path
+                method_parts = method.split('.')
+                client_method = self.client
+                for part in method_parts:
+                    client_method = getattr(client_method, part)
 
                 # Make the request
                 logger.debug(f"Making Notion API request: {method} (attempt {attempt + 1})")
