@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import click
-from tabulate import tabulate
+from tabulate import tabulate  # type: ignore[import-untyped]
 
 from ..notion_client import NotionClient
 from ..notion_sync import NotionSyncManager
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder for datetime objects."""
-    
+
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -259,7 +259,7 @@ def init_database(confirm: bool):
     必要なプロパティを持つNotionデータベースを作成します。
     """
     click.echo("⚠️ この機能は現在実装されていません。")
-    
+
     if not confirm:
         click.echo("Notionで手動でデータベースを作成し、以下のプロパティを追加してください:")
         click.echo("")

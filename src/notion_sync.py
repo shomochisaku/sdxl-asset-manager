@@ -94,25 +94,27 @@ class NotionFieldMapper:
                 elif prop_type == "rich_text":
                     local_data[local_field] = self._extract_rich_text(prop)
                 elif prop_type == "number":
-                    local_data[local_field] = self._extract_number(prop)
+                    local_data[local_field] = str(self._extract_number(prop)) if self._extract_number(prop) is not None else ""
                 elif prop_type == "select":
-                    local_data[local_field] = self._extract_select(prop)
+                    local_data[local_field] = self._extract_select(prop) or ""
                 elif prop_type == "multi_select":
-                    local_data[local_field] = self._extract_multi_select(prop)
+                    local_data[local_field] = ", ".join(self._extract_multi_select(prop))
                 elif prop_type == "created_time":
-                    local_data[local_field] = self._extract_datetime(prop)
+                    dt = self._extract_datetime(prop)
+                    local_data[local_field] = dt.isoformat() if dt else ""
                 elif prop_type == "last_edited_time":
-                    local_data[local_field] = self._extract_datetime(prop)
+                    dt = self._extract_datetime(prop)
+                    local_data[local_field] = dt.isoformat() if dt else ""
                 elif prop_type == "url":
-                    local_data[local_field] = self._extract_url(prop)
+                    local_data[local_field] = self._extract_url(prop) or ""
 
             except Exception as e:
                 logger.warning(f"Failed to convert {notion_field}: {e}")
                 continue
 
         # Add Notion-specific fields
-        local_data["notion_id"] = notion_page.get("id")
-        local_data["notion_url"] = notion_page.get("url")
+        local_data["notion_id"] = notion_page.get("id") or ""
+        local_data["notion_url"] = notion_page.get("url") or ""
 
         return local_data
 
@@ -126,7 +128,7 @@ class NotionFieldMapper:
         Returns:
             Notion properties format
         """
-        notion_properties = {}
+        notion_properties: Dict[str, Any] = {}
 
         # Title
         if run.title:
@@ -306,7 +308,7 @@ class NotionSyncManager:
                 # Get existing Notion pages for comparison
                 notion_pages = await self.notion_client.get_all_pages()
                 notion_pages_by_id = {
-                    page.get("id"): page for page in notion_pages
+                    str(page.get("id")): page for page in notion_pages
                     if page.get("id") is not None
                 }
 
@@ -344,7 +346,7 @@ class NotionSyncManager:
 
                 # Create lookup maps
                 notion_pages_by_id = {
-                    page.get("id"): page for page in notion_pages
+                    str(page.get("id")): page for page in notion_pages
                     if page.get("id") is not None
                 }
                 runs_by_notion_id = {

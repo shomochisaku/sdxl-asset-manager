@@ -113,7 +113,7 @@ class TestNotionFieldMapper:
         
         result = field_mapper.notion_to_local(notion_page)
         
-        assert result["cfg"] == 7.5
+        assert result["cfg"] == "7.5"
 
     def test_notion_to_local_select_field(self, field_mapper):
         """Test Notion to local conversion for select field."""
@@ -148,7 +148,7 @@ class TestNotionFieldMapper:
         
         result = field_mapper.notion_to_local(notion_page)
         
-        assert result["tag_names"] == ["anime", "portrait"]
+        assert result["tag_names"] == "anime, portrait"
 
     def test_notion_to_local_datetime_field(self, field_mapper):
         """Test Notion to local conversion for datetime field."""
@@ -168,7 +168,7 @@ class TestNotionFieldMapper:
         
         result = field_mapper.notion_to_local(notion_page)
         
-        assert result["created_at"] == test_datetime
+        assert result["created_at"] == "2023-01-01T12:00:00+00:00"
 
     def test_local_to_notion_basic_fields(self, field_mapper):
         """Test local to Notion conversion for basic fields."""

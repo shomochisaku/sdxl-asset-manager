@@ -155,7 +155,7 @@ class NotionClient:
 
                 # Make the request
                 logger.debug(f"Making Notion API request: {method} (attempt {attempt + 1})")
-                response = client_method(*args, **kwargs)
+                response = client_method(*args, **kwargs)  # type: ignore[operator]
 
                 logger.debug(f"Notion API request successful: {method}")
                 return response
