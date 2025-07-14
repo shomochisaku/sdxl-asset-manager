@@ -330,6 +330,228 @@ class TestYAMLCommands:
         assert result.exit_code == 0
         assert 'エクスポート対象のデータが見つかりません' in result.output
 
+    def test_yaml_export_default(self, runner, initialized_db, temp_yaml_file):
+        """デフォルトのYAMLエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # エクスポートを実行
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 1件' in result.output
+        assert 'Test Run' in result.output
+
+    def test_yaml_export_to_file(self, runner, initialized_db, temp_yaml_file):
+        """ファイルへのエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # ファイルにエクスポート
+        with runner.isolated_filesystem():
+            result = runner.invoke(cli, [
+                '--db', initialized_db,
+                'yaml', 'export',
+                '--output', 'export.yaml'
+            ])
+            assert result.exit_code == 0
+            assert 'データをエクスポートしました: export.yaml' in result.output
+            
+            # ファイルが作成されているか確認
+            import os
+            assert os.path.exists('export.yaml')
+            
+            # 内容を確認
+            with open('export.yaml', 'r', encoding='utf-8') as f:
+                content = f.read()
+                assert 'Test Run' in content
+
+    def test_yaml_export_json_format(self, runner, initialized_db, temp_yaml_file):
+        """JSON形式でのエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # JSON形式でエクスポート
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--format', 'json'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 1件' in result.output
+        
+        # JSONとして解析可能か確認
+        import json
+        lines = result.output.split('\n')
+        json_line = None
+        for line in lines:
+            if line.strip().startswith('['):
+                json_line = line.strip()
+                break
+        
+        assert json_line is not None
+        data = json.loads(json_line)
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]['run_title'] == 'Test Run'
+
+    def test_yaml_export_filtered_by_status(self, runner, initialized_db, temp_yaml_file):
+        """ステータスフィルタでのエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # Triedステータスでエクスポート
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--status', 'Tried'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 1件' in result.output
+        
+        # Finalステータスでエクスポート（該当なし）
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--status', 'Final'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象のデータが見つかりません' in result.output
+
+    def test_yaml_export_with_run_ids(self, runner, initialized_db, temp_yaml_file):
+        """Run ID指定でのエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # Run ID 1でエクスポート
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--run-ids', '1'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 1件' in result.output
+        
+        # 存在しないRun IDでエクスポート
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--run-ids', '999'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象のデータが見つかりません' in result.output
+        assert 'Run ID 999 が見つかりません' in result.output
+
+    def test_yaml_export_with_date_filters(self, runner, initialized_db, temp_yaml_file):
+        """日付フィルタでのエクスポートをテストします."""
+        # まずデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_file
+        ])
+        assert result.exit_code == 0
+        
+        # 今日の日付でフィルタ
+        from datetime import date
+        today = date.today().strftime('%Y-%m-%d')
+        
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--since', today
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 1件' in result.output
+        
+        # 未来の日付でフィルタ（該当なし）
+        future_date = '2030-01-01'
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--since', future_date
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象のデータが見つかりません' in result.output
+
+    def test_yaml_export_with_limit(self, runner, initialized_db, temp_yaml_dir):
+        """制限付きエクスポートをテストします."""
+        # まずディレクトリのデータを読み込み
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'load',
+            temp_yaml_dir
+        ])
+        assert result.exit_code == 0
+        assert '3件のYAMLファイルを正常に読み込みました' in result.output
+        
+        # 制限付きエクスポート
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--limit', '2'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象: 2件' in result.output
+
+    def test_yaml_export_invalid_date_format(self, runner, initialized_db):
+        """無効な日付形式でのエクスポートをテストします."""
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--since', 'invalid-date'
+        ])
+        assert result.exit_code == 1
+        assert '無効な開始日時形式です' in result.output
+        
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--until', 'invalid-date'
+        ])
+        assert result.exit_code == 1
+        assert '無効な終了日時形式です' in result.output
+
+    def test_yaml_export_nonexistent_run_id(self, runner, initialized_db):
+        """存在しないRun IDでのエクスポートをテストします."""
+        result = runner.invoke(cli, [
+            '--db', initialized_db,
+            'yaml', 'export',
+            '--run-ids', '1,2,3'
+        ])
+        assert result.exit_code == 0
+        assert 'エクスポート対象のデータが見つかりません' in result.output
+        assert 'Run ID 1 が見つかりません' in result.output
+        assert 'Run ID 2 が見つかりません' in result.output
+        assert 'Run ID 3 が見つかりません' in result.output
+
     def test_yaml_info(self, runner, temp_yaml_file):
         """YAMLファイル情報表示をテストします."""
         result = runner.invoke(cli, [

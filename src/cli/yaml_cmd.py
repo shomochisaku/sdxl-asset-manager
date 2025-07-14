@@ -366,6 +366,16 @@ def validate(ctx: click.Context, files: tuple, strict: bool) -> None:
     default=None,
     help='エクスポート対象のRun ID（カンマ区切り）'
 )
+@click.option(
+    '--since',
+    default=None,
+    help='開始日時（YYYY-MM-DD形式）'
+)
+@click.option(
+    '--until',
+    default=None,
+    help='終了日時（YYYY-MM-DD形式）'
+)
 @click.pass_context
 def export(
     ctx: click.Context,
@@ -373,7 +383,9 @@ def export(
     format: str,
     status: Optional[str],
     limit: Optional[int],
-    run_ids: Optional[str]
+    run_ids: Optional[str],
+    since: Optional[str],
+    until: Optional[str]
 ) -> None:
     """データベースからYAML/JSON形式でデータをエクスポートします.
 
@@ -382,6 +394,8 @@ def export(
     state = CliState(ctx)
 
     try:
+        from src.utils.db_utils import export_runs_with_relations
+        
         db_manager = state.db_manager
 
         # エクスポート条件を構築
@@ -389,81 +403,67 @@ def export(
         if status:
             filters['status'] = status
 
-        # Run IDが指定されている場合
+        # Run IDリストを準備
+        run_id_list = None
         if run_ids:
             try:
-                id_list = [int(id.strip()) for id in run_ids.split(',')]
-                runs = []
-                for run_id in id_list:
-                    run = db_manager.get_record_by_id(Run, run_id)
-                    if run:
-                        runs.append(run)
-                    else:
-                        display_warning(f"Run ID {run_id} が見つかりません")
+                run_id_list = [int(id.strip()) for id in run_ids.split(',')]
             except ValueError:
                 display_error("無効なRun ID形式です（数値をカンマ区切りで指定してください）")
                 ctx.exit(1)
                 return
-        else:
-            # フィルタ条件で取得
-            runs = db_manager.get_records(
-                Run,
-                filters=filters,
-                order_by='created_at',
-                limit=limit
-            )
 
-        if not runs:
+        # 日付バリデーション
+        since_date = None
+        until_date = None
+        if since:
+            try:
+                from datetime import datetime
+                since_dt = datetime.strptime(since, '%Y-%m-%d')
+                since_date = since_dt.isoformat()
+            except ValueError:
+                display_error("無効な開始日時形式です（YYYY-MM-DD形式で指定してください）")
+                ctx.exit(1)
+                return
+
+        if until:
+            try:
+                from datetime import datetime
+                until_dt = datetime.strptime(until, '%Y-%m-%d')
+                until_date = until_dt.isoformat()
+            except ValueError:
+                display_error("無効な終了日時形式です（YYYY-MM-DD形式で指定してください）")
+                ctx.exit(1)
+                return
+
+        # データをエクスポート
+        try:
+            export_data = export_runs_with_relations(
+                db_manager=db_manager,
+                filters=filters,
+                run_ids=run_id_list,
+                since_date=since_date,
+                until_date=until_date,
+                limit=limit,
+                order_by='created_at'
+            )
+        except ValueError as e:
+            display_error(str(e))
+            ctx.exit(1)
+            return
+
+        if not export_data:
             display_warning("エクスポート対象のデータが見つかりません")
             return
 
-        display_info(f"エクスポート対象: {len(runs)}件")
+        display_info(f"エクスポート対象: {len(export_data)}件")
 
-        # データを変換
-        export_data = []
-
-        for run in progress_bar(runs, "データを変換中"):
-            run_data = {
-                'run_title': run.title,
-                'prompt': run.prompt,
-                'cfg': run.cfg,
-                'steps': run.steps,
-                'sampler': run.sampler,
-                'status': run.status
-            }
-
-            # オプショナルフィールド
-            if run.negative:
-                run_data['negative'] = run.negative
-            if run.seed is not None:
-                run_data['seed'] = run.seed
-            if run.width != 1024:
-                run_data['width'] = run.width
-            if run.height != 1024:
-                run_data['height'] = run.height
-            if run.source:
-                run_data['source'] = run.source
-
-            # モデル情報
-            if run.model:
-                run_data['model'] = run.model.name
-
-            # LoRA情報
-            if run.loras:
-                lora_names = []
-                for run_lora in run.loras:
-                    lora_names.append(run_lora.lora_model.name)
-                if lora_names:
-                    run_data['loras'] = lora_names
-
-            # メタデータ
-            run_data['_metadata'] = {
-                'run_id': run.run_id,
-                'created_at': run.created_at.isoformat() if run.created_at else None,
-                'updated_at': run.updated_at.isoformat() if run.updated_at else None
-            }
-
-            export_data.append(run_data)
+        # Run IDが指定されていて見つからないものがあれば警告
+        if run_id_list:
+            found_ids = {data['_metadata']['run_id'] for data in export_data}
+            missing_ids = set(run_id_list) - found_ids
+            for missing_id in missing_ids:
+                display_warning(f"Run ID {missing_id} が見つかりません")
 
         # 出力
         if output:
