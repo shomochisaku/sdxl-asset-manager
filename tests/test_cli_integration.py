@@ -133,7 +133,8 @@ class TestCLIIntegration:
         with runner.isolated_filesystem():
             # 1. 初期化されていないDBでの操作
             result = runner.invoke(cli, ['--db', temp_db, 'db', 'status'])
-            assert result.exit_code == 3  # ファイルエラー
+            assert result.exit_code == 1  # データベースエラー
+            assert 'データベース接続エラー' in result.output
             
             # 2. 無効なYAMLファイルの処理
             with open('invalid.yaml', 'w') as f:

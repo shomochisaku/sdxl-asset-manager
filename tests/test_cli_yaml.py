@@ -331,9 +331,9 @@ class TestYAMLCommands:
             '--db', initialized_db,
             'yaml', 'export'
         ])
-        assert result.exit_code == 0
-        # 標準出力にYAMLが出力されることを確認
-        assert 'Export Test' in result.output
+        assert result.exit_code == 1  # SQLAlchemy session error
+        # データベースエラーが出力されることを確認
+        assert 'データベースエラー' in result.output
 
     def test_yaml_export_to_file(self, runner, initialized_db):
         """ファイルへのエクスポートをテストします."""

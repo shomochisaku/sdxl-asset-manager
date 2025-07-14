@@ -165,7 +165,7 @@ class TestDBCommands:
             'db', 'backup'
         ])
         assert result.exit_code == 1  # データベースエラー
-        assert 'データベース接続エラー' in result.output
+        assert 'データベースファイルが見つかりません' in result.output
 
     def test_db_restore(self, runner, initialized_db, temp_backup_dir):
         """バックアップからの復元をテストします."""
