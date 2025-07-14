@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session, sessionmaker, joinedload
+from sqlalchemy.orm import Session, joinedload, sessionmaker
 
 from src.models.database import Base, Image, Model, Run, RunLora, RunTag
 from src.utils.db_init import get_session_factory, initialize_database

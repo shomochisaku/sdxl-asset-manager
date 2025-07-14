@@ -145,23 +145,23 @@ class Run(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-        
+
         # Add model name if available
         if hasattr(self, 'model') and self.model:
             result['model'] = self.model.name
-        
+
         # Add LoRA names if available
         if hasattr(self, 'loras') and self.loras:
             result['loras'] = [lora.lora_model.name for lora in self.loras]
-        
+
         # Add tag names if available
         if hasattr(self, 'tags') and self.tags:
             result['tags'] = [tag.tag.name for tag in self.tags]
-        
+
         # Add image information if available
         if hasattr(self, 'images') and self.images:
             result['images'] = [image.to_dict() for image in self.images]
-        
+
         # Add metadata
         result['_metadata'] = {
             'run_id': self.run_id,
@@ -169,7 +169,7 @@ class Run(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-        
+
         return result
 
 
@@ -286,11 +286,11 @@ class RunLora(Base):
             'lora_id': self.lora_id,
             'weight': self.weight
         }
-        
+
         # Add LoRA model name if available
         if hasattr(self, 'lora_model') and self.lora_model:
             result['lora_name'] = self.lora_model.name
-        
+
         return result
 
 
@@ -323,12 +323,12 @@ class RunTag(Base):
             'run_id': self.run_id,
             'tag_id': self.tag_id
         }
-        
+
         # Add tag details if available
         if hasattr(self, 'tag') and self.tag:
             result['tag_name'] = self.tag.name
             result['tag_category'] = self.tag.category
-        
+
         return result
 
 

@@ -10,7 +10,6 @@ from typing import Optional
 import click
 import yaml
 
-from src.models.database import Run
 from src.yaml_loader import (
     YAMLLoader,
     YAMLLoaderError,
@@ -395,7 +394,7 @@ def export(
 
     try:
         from src.utils.db_utils import export_runs_with_relations
-        
+
         db_manager = state.db_manager
 
         # エクスポート条件を構築
