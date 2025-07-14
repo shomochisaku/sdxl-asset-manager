@@ -400,14 +400,26 @@ class TestYAMLCommands:
         # JSONとして解析可能か確認
         import json
         lines = result.output.split('\n')
-        json_line = None
-        for line in lines:
+        json_start_idx = None
+        for i, line in enumerate(lines):
             if line.strip().startswith('['):
-                json_line = line.strip()
+                json_start_idx = i
                 break
         
-        assert json_line is not None
-        data = json.loads(json_line)
+        assert json_start_idx is not None
+        
+        # JSON部分を抽出（multiline JSONを考慮）
+        json_lines = []
+        bracket_count = 0
+        for i in range(json_start_idx, len(lines)):
+            line = lines[i]
+            json_lines.append(line)
+            bracket_count += line.count('[') - line.count(']')
+            if bracket_count == 0 and line.strip().endswith(']'):
+                break
+        
+        json_str = '\n'.join(json_lines)
+        data = json.loads(json_str)
         assert isinstance(data, list)
         assert len(data) == 1
         assert data[0]['run_title'] == 'Test Run'

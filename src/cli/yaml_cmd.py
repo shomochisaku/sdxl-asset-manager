@@ -452,18 +452,18 @@ def export(
             ctx.exit(1)
             return
 
-        if not export_data:
-            display_warning("エクスポート対象のデータが見つかりません")
-            return
-
-        display_info(f"エクスポート対象: {len(export_data)}件")
-
         # Run IDが指定されていて見つからないものがあれば警告
         if run_id_list:
             found_ids = {data['_metadata']['run_id'] for data in export_data}
             missing_ids = set(run_id_list) - found_ids
             for missing_id in missing_ids:
                 display_warning(f"Run ID {missing_id} が見つかりません")
+
+        if not export_data:
+            display_warning("エクスポート対象のデータが見つかりません")
+            return
+
+        display_info(f"エクスポート対象: {len(export_data)}件")
 
         # 出力
         if output:
