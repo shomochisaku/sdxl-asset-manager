@@ -63,6 +63,8 @@ addopts = [
     "--cov-report=html",
     "-v"
 ]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.black]
 line-length = 100
