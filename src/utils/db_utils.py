@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 from sqlalchemy import desc, or_
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, joinedload, sessionmaker
 
 from src.models.database import Base, Image, Model, Run, RunLora, RunTag
 from src.utils.db_init import get_session_factory, initialize_database
@@ -352,3 +352,88 @@ def create_run_with_loras(
         session.refresh(run)
         session.expunge(run)  # セッションから切り離してDetachedInstanceErrorを防ぐ
         return run
+
+
+def export_runs_with_relations(
+    db_manager: DatabaseManager,
+    filters: Optional[Dict[str, Any]] = None,
+    run_ids: Optional[List[int]] = None,
+    since_date: Optional[str] = None,
+    until_date: Optional[str] = None,
+    limit: Optional[int] = None,
+    order_by: str = "created_at"
+) -> List[Dict[str, Any]]:
+    """関連データを含む実行履歴をエクスポート用に取得します.
+
+    このファンクションは適切なeager loadingを使用してDetachedInstanceErrorを回避し、
+    session.expunge()後にも安全にアクセスできるシリアライズ済みデータを返します。
+
+    Args:
+        db_manager: DatabaseManagerインスタンス
+        filters: フィルタ条件の辞書
+        run_ids: 特定のRun IDのリスト
+        since_date: 開始日時（ISO 8601形式）
+        until_date: 終了日時（ISO 8601形式）
+        limit: 取得件数制限
+        order_by: ソート用カラム名
+
+    Returns:
+        シリアライズ済みの実行履歴データのリスト
+
+    Raises:
+        ValueError: 日付形式が無効な場合
+        SQLAlchemyError: データベース操作エラー
+    """
+    with db_manager.get_session() as session:
+        # Eager loadingで関連データを先読み
+        query = session.query(Run).options(
+            joinedload(Run.model),
+            joinedload(Run.loras).joinedload(RunLora.lora_model),
+            joinedload(Run.images),
+            joinedload(Run.tags).joinedload(RunTag.tag)
+        )
+
+        # フィルタを適用
+        if filters:
+            for key, value in filters.items():
+                if hasattr(Run, key):
+                    query = query.filter(getattr(Run, key) == value)
+
+        # Run IDが指定されている場合
+        if run_ids:
+            query = query.filter(Run.run_id.in_(run_ids))
+
+        # 日付範囲フィルタ
+        if since_date:
+            from datetime import datetime
+            try:
+                since_dt = datetime.fromisoformat(since_date.replace('Z', '+00:00'))
+                query = query.filter(Run.created_at >= since_dt)
+            except ValueError as e:
+                raise ValueError(f"Invalid since_date format: {since_date}") from e
+
+        if until_date:
+            from datetime import datetime
+            try:
+                until_dt = datetime.fromisoformat(until_date.replace('Z', '+00:00'))
+                query = query.filter(Run.created_at <= until_dt)
+            except ValueError as e:
+                raise ValueError(f"Invalid until_date format: {until_date}") from e
+
+        # ソートを適用
+        if order_by and hasattr(Run, order_by):
+            query = query.order_by(getattr(Run, order_by))
+
+        # 制限を適用
+        if limit is not None:
+            query = query.limit(limit)
+
+        # データを取得
+        runs = query.all()
+
+        # sessionが生きている間にto_dict()を実行してシリアライズ
+        serialized_runs = []
+        for run in runs:
+            serialized_runs.append(run.to_dict())
+
+        return serialized_runs

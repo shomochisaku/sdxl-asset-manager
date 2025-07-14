@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy import (
     REAL,
@@ -60,6 +60,19 @@ class Model(Base):
         """文字列表現を返します."""
         return f"<Model(id={self.model_id}, name='{self.name}', type='{self.type}')>"
 
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        return {
+            'model_id': self.model_id,
+            'name': self.name,
+            'type': self.type,
+            'filename': self.filename,
+            'source': self.source,
+            'notes': self.notes,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
 
 class Run(Base):
     """実行履歴テーブル.
@@ -111,6 +124,54 @@ class Run(Base):
         """文字列表現を返します."""
         return f"<Run(id={self.run_id}, title='{self.title}', status='{self.status}')>"
 
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        result: Dict[str, Any] = {
+            'run_title': self.title,
+            'prompt': self.prompt,
+            'negative': self.negative,
+            'cfg': self.cfg,
+            'steps': self.steps,
+            'sampler': self.sampler,
+            'scheduler': self.scheduler,
+            'seed': self.seed,
+            'width': self.width,
+            'height': self.height,
+            'batch_size': self.batch_size,
+            'status': self.status,
+            'source': self.source,
+            'notion_page_id': self.notion_page_id,
+            'comfyui_workflow_id': self.comfyui_workflow_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+        # Add model name if available
+        if hasattr(self, 'model') and self.model:
+            result['model'] = self.model.name
+
+        # Add LoRA names if available
+        if hasattr(self, 'loras') and self.loras:
+            result['loras'] = [lora.lora_model.name for lora in self.loras]
+
+        # Add tag names if available
+        if hasattr(self, 'tags') and self.tags:
+            result['tags'] = [tag.tag.name for tag in self.tags]
+
+        # Add image information if available
+        if hasattr(self, 'images') and self.images:
+            result['images'] = [image.to_dict() for image in self.images]
+
+        # Add metadata
+        result['_metadata'] = {
+            'run_id': self.run_id,
+            'model_id': self.model_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+        return result
+
 
 class Image(Base):
     """生成画像テーブル.
@@ -142,6 +203,21 @@ class Image(Base):
         """文字列表現を返します."""
         return f"<Image(id={self.image_id}, filename='{self.filename}')>"
 
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        return {
+            'image_id': self.image_id,
+            'run_id': self.run_id,
+            'filename': self.filename,
+            'filepath': self.filepath,
+            'width': self.width,
+            'height': self.height,
+            'file_size': self.file_size,
+            'hash': self.hash,
+            'image_metadata': self.image_metadata,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 
 class Tag(Base):
     """タグテーブル.
@@ -166,6 +242,15 @@ class Tag(Base):
     def __repr__(self) -> str:
         """文字列表現を返します."""
         return f"<Tag(id={self.tag_id}, name='{self.name}', category='{self.category}')>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        return {
+            'tag_id': self.tag_id,
+            'name': self.name,
+            'category': self.category,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
 
 class RunLora(Base):
@@ -194,6 +279,20 @@ class RunLora(Base):
         """文字列表現を返します."""
         return f"<RunLora(run_id={self.run_id}, lora_id={self.lora_id}, weight={self.weight})>"
 
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        result: Dict[str, Any] = {
+            'run_id': self.run_id,
+            'lora_id': self.lora_id,
+            'weight': self.weight
+        }
+
+        # Add LoRA model name if available
+        if hasattr(self, 'lora_model') and self.lora_model:
+            result['lora_name'] = self.lora_model.name
+
+        return result
+
 
 class RunTag(Base):
     """実行履歴とタグの関連付けテーブル.
@@ -217,6 +316,20 @@ class RunTag(Base):
     def __repr__(self) -> str:
         """文字列表現を返します."""
         return f"<RunTag(run_id={self.run_id}, tag_id={self.tag_id})>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """YAML export用の辞書形式に変換."""
+        result: Dict[str, Any] = {
+            'run_id': self.run_id,
+            'tag_id': self.tag_id
+        }
+
+        # Add tag details if available
+        if hasattr(self, 'tag') and self.tag:
+            result['tag_name'] = self.tag.name
+            result['tag_category'] = self.tag.category
+
+        return result
 
 
 # Auto-update triggers for updated_at fields
