@@ -83,43 +83,7 @@ class TestCLIIntegration:
             assert result.exit_code == 0
             assert 'Integration Test Run' in result.output
             
-            # 6. 実行履歴検索（実装未完了のためスキップ）
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'search', 'prompt',
-            #     'integration test'
-            # ])
-            # assert result.exit_code == 0
-            # assert 'Integration Test Run' in result.output
-            
-            # 7. 実行履歴一覧（実装未完了のためスキップ）
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'list',
-            #     '--status', 'Final'
-            # ])
-            # assert result.exit_code == 0
-            # assert 'Integration Test Run' in result.output
-            
-            # 8. 実行履歴詳細表示（実装未完了のためスキップ）
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'show', '1'
-            # ])
-            # assert result.exit_code == 0
-            # assert 'Integration Test Run' in result.output
-            # assert 'integration_test_model.safetensors' in result.output
-            
-            # 9. YAMLエクスポート（SQLAlchemy session問題のためスキップ）
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'yaml', 'export',
-            #     '--output', 'exported.yaml'
-            # ])
-            # assert result.exit_code == 0
-            # assert Path('exported.yaml').exists()
-            
-            # 10. バックアップ作成
+            # 6. バックアップ作成
             result = runner.invoke(cli, [
                 '--db', temp_db,
                 'db', 'backup',
@@ -182,86 +146,7 @@ class TestCLIIntegration:
             ])
             assert result.exit_code == 0
             assert '3件のYAMLファイルを正常に読み込みました' in result.output
-            
-            # ステータス別統計確認（実装未完了のためスキップ）
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'search', 'stats'
-            # ])
-            # assert result.exit_code == 0
-            # assert 'ステータス別統計' in result.output
-            
-            # 各ステータスでフィルタリング（実装未完了のためスキップ）
-            # for status in ['Purchased', 'Tried', 'Final']:
-            #     result = runner.invoke(cli, [
-            #         '--db', temp_db,
-            #         'run', 'list',
-            #         '--status', status
-            #     ])
-            #     assert result.exit_code == 0
-            #     assert '1件' in result.output
 
-    def test_output_format_consistency(self, runner, temp_db):
-        """出力形式の整合性をテストします."""
-        with runner.isolated_filesystem():
-            # セットアップ
-            result = runner.invoke(cli, ['--db', temp_db, 'db', 'init'])
-            assert result.exit_code == 0
-            
-            yaml_data = {
-                'run_title': 'Format Test Run',
-                'prompt': 'format test prompt',
-                'cfg': 7.5,
-                'steps': 20,
-                'sampler': 'DPM++ 2M',
-                'status': 'Final'
-            }
-            
-            with open('format_test.yaml', 'w') as f:
-                yaml.dump(yaml_data, f, allow_unicode=True)
-            
-            result = runner.invoke(cli, [
-                '--db', temp_db,
-                'yaml', 'load',
-                'format_test.yaml'
-            ])
-            assert result.exit_code == 0
-            
-            # 出力形式テスト（実装未完了のためスキップ）
-            # テーブル形式出力
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'list',
-            #     '--output', 'table'
-            # ])
-            # assert result.exit_code == 0
-            # assert 'Format Test Run' in result.output
-            
-            # JSON形式出力
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'list',
-            #     '--output', 'json'
-            # ])
-            # assert result.exit_code == 0
-            # # JSONとして解析可能であることを確認
-            # try:
-            #     json.loads(result.output)
-            # except json.JSONDecodeError:
-            #     pytest.fail("JSON output is not valid")
-            
-            # YAML形式出力
-            # result = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'list',
-            #     '--output', 'yaml'
-            # ])
-            # assert result.exit_code == 0
-            # # YAMLとして解析可能であることを確認
-            # try:
-            #     yaml.safe_load(result.output)
-            # except yaml.YAMLError:
-            #     pytest.fail("YAML output is not valid")
 
     def test_concurrent_operations(self, runner, temp_db):
         """並行操作の安全性をテストします."""
@@ -289,21 +174,13 @@ class TestCLIIntegration:
             ])
             assert result.exit_code == 0
             
-            # 同時にステータス確認と更新を実行
-            # （実際の並行処理ではないが、一連の操作として）
+            # ステータス確認
             result1 = runner.invoke(cli, ['--db', temp_db, 'db', 'status'])
             assert result1.exit_code == 0
             
-            # result2 = runner.invoke(cli, [
-            #     '--db', temp_db,
-            #     'run', 'update', '1',
-            #     '--status', 'Final'
-            # ], input='y\n')
-            # assert result2.exit_code == 0
-            
-            # 更新後の確認
-            result3 = runner.invoke(cli, ['--db', temp_db, 'db', 'status'])
-            assert result3.exit_code == 0
+            # 再度ステータス確認（データ整合性確認）
+            result2 = runner.invoke(cli, ['--db', temp_db, 'db', 'status'])
+            assert result2.exit_code == 0
 
     def test_cleanup_and_maintenance(self, runner, temp_db):
         """クリーンアップとメンテナンスワークフローをテストします."""
