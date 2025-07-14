@@ -456,6 +456,9 @@ class TestNotionSyncManager:
     @pytest.mark.asyncio
     async def test_detect_conflicts_no_conflicts(self, sync_manager):
         """Test conflict detection with no conflicts."""
+        # Use the same datetime for both local and notion to avoid false conflicts
+        fixed_datetime = datetime.now(timezone.utc)
+        
         mock_pages = [
             {
                 "id": "page1",
@@ -466,7 +469,7 @@ class TestNotionSyncManager:
         ]
         
         mock_runs = [
-            MagicMock(run_id=1, title="Run 1", notion_id="page1", updated_at=datetime.now(timezone.utc))
+            MagicMock(run_id=1, title="Run 1", notion_id="page1", updated_at=fixed_datetime)
         ]
         
         sync_manager.notion_client.get_all_pages.return_value = mock_pages
@@ -475,7 +478,7 @@ class TestNotionSyncManager:
             mock_session.return_value.__enter__.return_value.execute.return_value.scalars.return_value.all.return_value = mock_runs
             
             with patch.object(sync_manager.field_mapper, 'notion_to_local') as mock_convert:
-                mock_convert.return_value = {"updated_at": datetime.now(timezone.utc)}
+                mock_convert.return_value = {"updated_at": fixed_datetime}
                 
                 conflicts = await sync_manager.detect_conflicts()
                 
@@ -537,14 +540,15 @@ class TestNotionSyncManager:
         mock_session = MagicMock()
         mock_session.execute.return_value.scalar_one_or_none.return_value = None
         
-        with patch('src.notion_sync.Model') as mock_model_class:
-            mock_model_instance = MagicMock()
-            mock_model_class.return_value = mock_model_instance
-            
-            result = await sync_manager._get_or_create_model("TestModel", mock_session)
-            
-            assert result == mock_model_instance
-            mock_session.add.assert_called_once_with(mock_model_instance)
+        result = await sync_manager._get_or_create_model("TestModel", mock_session)
+        
+        # Check that a new model was created with the correct name
+        assert result.name == "TestModel"
+        assert result.type is None  # Default type
+        # Check that the model was added to the session
+        mock_session.add.assert_called_once()
+        added_model = mock_session.add.call_args[0][0]
+        assert added_model.name == "TestModel"
 
     @pytest.mark.asyncio
     async def test_get_or_create_lora_existing(self, sync_manager):
@@ -564,15 +568,16 @@ class TestNotionSyncManager:
         mock_session = MagicMock()
         mock_session.execute.return_value.scalar_one_or_none.return_value = None
         
-        with patch('src.notion_sync.Model') as mock_model_class:
-            mock_lora_instance = MagicMock()
-            mock_model_class.return_value = mock_lora_instance
-            
-            result = await sync_manager._get_or_create_lora("TestLoRA", mock_session)
-            
-            assert result == mock_lora_instance
-            mock_model_class.assert_called_once_with(name="TestLoRA", type="lora")
-            mock_session.add.assert_called_once_with(mock_lora_instance)
+        result = await sync_manager._get_or_create_lora("TestLoRA", mock_session)
+        
+        # Check that a new LoRA was created with the correct name and type
+        assert result.name == "TestLoRA"
+        assert result.type == "lora"
+        # Check that the LoRA was added to the session
+        mock_session.add.assert_called_once()
+        added_lora = mock_session.add.call_args[0][0]
+        assert added_lora.name == "TestLoRA"
+        assert added_lora.type == "lora"
 
     @pytest.mark.asyncio
     async def test_get_or_create_tag_existing(self, sync_manager):
@@ -592,15 +597,14 @@ class TestNotionSyncManager:
         mock_session = MagicMock()
         mock_session.execute.return_value.scalar_one_or_none.return_value = None
         
-        with patch('src.notion_sync.Tag') as mock_tag_class:
-            mock_tag_instance = MagicMock()
-            mock_tag_class.return_value = mock_tag_instance
-            
-            result = await sync_manager._get_or_create_tag("TestTag", mock_session)
-            
-            assert result == mock_tag_instance
-            mock_tag_class.assert_called_once_with(name="TestTag")
-            mock_session.add.assert_called_once_with(mock_tag_instance)
+        result = await sync_manager._get_or_create_tag("TestTag", mock_session)
+        
+        # Check that a new tag was created with the correct name
+        assert result.name == "TestTag"
+        # Check that the tag was added to the session
+        mock_session.add.assert_called_once()
+        added_tag = mock_session.add.call_args[0][0]
+        assert added_tag.name == "TestTag"
 
     def test_log_sync_stats(self, sync_manager):
         """Test sync statistics logging."""

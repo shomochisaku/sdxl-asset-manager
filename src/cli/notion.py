@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import click
@@ -19,6 +20,15 @@ from ..notion_sync import NotionSyncManager
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder for datetime objects."""
+    
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 @click.group()
@@ -164,16 +174,16 @@ def sync(direction: str, dry_run: bool, output_format: str):
             return
 
         # 同期実行
-        if dry_run:
-            click.echo("🔍 ドライランモード: 実際の変更は行いません")
-
-        click.echo(f"🔄 同期を開始しています... (方向: {direction})")
+        if output_format != 'json':
+            if dry_run:
+                click.echo("🔍 ドライランモード: 実際の変更は行いません")
+            click.echo(f"🔄 同期を開始しています... (方向: {direction})")
 
         result = asyncio.run(_sync_async(api_key, database_id, direction, dry_run))
 
         # 結果を表示
         if output_format == 'json':
-            click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+            click.echo(json.dumps(result, ensure_ascii=False, indent=2, cls=DateTimeEncoder))
         else:
             _print_sync_results(result, direction, dry_run)
 
@@ -203,30 +213,37 @@ def conflicts(resolve: Optional[str], output_format: str):
             click.echo("'notion setup' コマンドで設定を行ってください。")
             return
 
-        click.echo("🔍 競合を検出しています...")
+        if output_format != 'json':
+            click.echo("🔍 競合を検出しています...")
 
         conflicts_data = asyncio.run(_detect_conflicts_async(api_key, database_id))
 
         if not conflicts_data:
-            click.echo("✅ 競合は見つかりませんでした。")
+            if output_format == 'json':
+                click.echo(json.dumps([], ensure_ascii=False, indent=2))
+            else:
+                click.echo("✅ 競合は見つかりませんでした。")
             return
 
         # 競合を表示
         if output_format == 'json':
-            click.echo(json.dumps(conflicts_data, ensure_ascii=False, indent=2))
+            click.echo(json.dumps(conflicts_data, ensure_ascii=False, indent=2, cls=DateTimeEncoder))
         else:
             _print_conflicts_table(conflicts_data)
 
         # 自動解決
         if resolve == 'auto':
-            click.echo("\n🔄 自動解決を実行しています...")
+            if output_format != 'json':
+                click.echo("\n🔄 自動解決を実行しています...")
             # 最新の更新時刻を優先して解決
             result = asyncio.run(_resolve_conflicts_auto(api_key, database_id))
-            click.echo(f"✅ {result['resolved']} 件の競合を解決しました。")
+            if output_format != 'json':
+                click.echo(f"✅ {result['resolved']} 件の競合を解決しました。")
 
         elif resolve == 'manual':
-            click.echo("\n⚠️ 手動解決は現在実装されていません。")
-            click.echo("auto解決を使用するか、手動で Notion または Local DB を更新してください。")
+            if output_format != 'json':
+                click.echo("\n⚠️ 手動解決は現在実装されていません。")
+                click.echo("auto解決を使用するか、手動で Notion または Local DB を更新してください。")
 
     except Exception as e:
         click.echo(f"❌ 競合検出に失敗しました: {e}")
@@ -241,8 +258,9 @@ def init_database(confirm: bool):
 
     必要なプロパティを持つNotionデータベースを作成します。
     """
+    click.echo("⚠️ この機能は現在実装されていません。")
+    
     if not confirm:
-        click.echo("⚠️ この機能は現在実装されていません。")
         click.echo("Notionで手動でデータベースを作成し、以下のプロパティを追加してください:")
         click.echo("")
 
