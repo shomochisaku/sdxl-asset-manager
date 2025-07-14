@@ -263,115 +263,42 @@ CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持し
 - エラー時は詳細なスタックトレースを含める
 - SQLクエリはパラメータ化して実行（SQLインジェクション対策）
 
-## 開発進捗 (2025-07-13)
+## 開発ロードマップ
 
-### ✅ 完了済み
+### 📍 現在の進捗状況
 
-#### プロジェクト基盤
-- ✅ GitHubリポジトリ作成・初期セットアップ
-- ✅ プロジェクト構造設計 (src/, tests/, docs/, data/)
-- ✅ 依存関係管理 (requirements.txt, pyproject.toml)
-- ✅ Git-flowブランチ戦略の採用
-- ✅ Claude GitHub App連携設定完了
+**詳細な進捗状況については、[GitHub Issues](https://github.com/shomochisaku/sdxl-asset-manager/issues)および[Pull Requests](https://github.com/shomochisaku/sdxl-asset-manager/pulls)を参照してください。**
 
-#### CI/CD & 品質管理
-- ✅ GitHub Actions CI設定 (pytest, mypy, ruff)
-- ✅ ブランチ保護ルール設定 (Pull Request必須)
-- ✅ Claude Code Review自動レビュー
-- ✅ テストカバレッジ設定
+### 🗺️ 全体ロードマップ
 
-#### Phase 1: 基本機能実装
-1. **データベース基盤 (Issue #10) ✅ 完了**
-   - SQLAlchemyモデル設計・実装 (6テーブル)
-   - データベース初期化機能
-   - CRUD操作ユーティリティ
-   - 包括的テストスイート (21テスト)
-   - PR #11でマージ済み
+#### Phase 1: 基本機能実装 ✅ **完了**
+- **データベース基盤**: SQLAlchemyモデル、初期化、CRUD操作
+- **YAMLローダー**: ファイル読み込み、バリデーション、DB挿入
+- **CLI基本機能**: click使用のモダンCLI (db, yaml, search, run)
+- **YAML export機能**: Run データの YAML/JSON 出力
+- **品質管理**: Python 3.9+互換性、テストスイート、CI/CD
 
-2. **YAMLローダー (Issue #2) ✅ 完了**
-   - YAMLファイル読み込み・バリデーション
-   - SQLAlchemyモデルへの変換
-   - データベース挿入機能
-   - LoRA・モデル関係管理
-   - 包括的テストスイート (47テスト)
-   - PR #12でマージ済み
+#### Phase 2: 外部連携機能 🔄 **進行中**
+- **Notion API同期**: Notion DB ↔ SQLite 双方向同期
+- **ComfyUI API連携**: ワークフロー生成・実行
+- **バッチ処理**: 自動化スクリプト
 
-#### 技術的解決事項
-- ✅ SQLAlchemy 2.0+ 対応
-- ✅ DetachedInstanceError対策 (session.expunge)
-- ✅ 型注釈対応 (mypy strict mode)
-- ✅ Claude GitHub App運用フロー確立
-- ✅ ブランチ保護ルール運用経験
+#### Phase 3: AI機能強化
+- **LLMエージェント**: SQL検索ツール、プロンプト最適化
+- **ベクトル検索**: Supabase/Chroma連携（オプション）
+- **推奨機能**: 類似画像・プロンプト提案
 
-### 🔄 進行中
+#### Phase 4: 高度な機能
+- **Web UI**: Streamlit/FastAPI インターフェース
+- **チーム機能**: PostgreSQL移行、共有機能
+- **クラウド対応**: AWS/GCP ホスティング
 
-#### Issue #13 - CLI基本機能実装
-- **状況**: Claude GitHub App実装中
-- **内容**: click使用のモダンCLI
-- **コマンド**: db, yaml, search, run
-- **優先度**: Phase 1最終タスク
+### 💡 技術選択と学習事項
 
-### 📋 次のステップ
-
-#### 1. Phase 1完了後の即座対応
-- [ ] CLI実装完了・テスト (Issue #13)
-- [ ] データベースマイグレーション機能
-- [ ] ruff style問題修正 (別Issue/PR)
-- [ ] Phase 1統合テスト実施
-
-#### 2. Phase 2: 外部連携機能
-- [ ] Notion API同期機能 (Issue #4)
-- [ ] ComfyUI API連携 (Issue #5)
-- [ ] バッチ処理・自動化
-
-#### 3. Phase 3以降
-- [ ] LLMエージェント機能
-- [ ] Web UI実装
-- [ ] 高度な検索・分析機能
-
-### 🚨 既知の課題
-
-1. **~~ruffスタイルエラー (717件)~~ ✅ 解決済み（Issue #15）**
-   - ✅ 579件の自動修正 + 手動修正で全エラー解決
-   - ✅ pyproject.toml設定をlintセクションに移行
-   - ✅ Python 3.9+互換性維持のため型注釈を全面修正
-
-2. **~~datetime.utcnow() 非推奨警告~~ ✅ 解決済み（Issue #15）**
-   - ✅ `datetime.now(timezone.utc)` に移行完了（Python 3.9互換）
-   - ✅ SQLAlchemyモデルのタイムスタンプ関数を更新
-
-3. **~~型注釈互換性問題~~ ✅ 解決済み（Issue #15）**
-   - ✅ Python 3.10+型注釈を全面的にPython 3.9+互換に変更
-   - ✅ `str | None` → `Optional[str]`、`dict[str, Any]` → `Dict[str, Any]` 等
-   - ✅ ruff設定で互換性ルール無視設定追加 (UP045, UP006, UP007, UP017, UP035)
-
-### 💡 学習事項
-
-1. **Claude GitHub App運用**
-   - 自動実装は成功、手動PR作成・マージが必要
-   - CI失敗時のトラブルシューティング経験蓄積
-   - @claudeメンションで効率的な実装指示
-
-2. **SQLAlchemy 2.0移行**
-   - session管理のベストプラクティス習得
-   - 型安全性の重要性確認
-   - DetachedInstanceError対策の実装
-
-3. **CI/CD最適化**
-   - 段階的品質チェック (tests → types → style)
-   - 一時的無効化による開発速度とクオリティのバランス
-   - ブランチ保護ルールの柔軟な運用
-
-4. **開発フロー最適化**
-   - Claude Code CLI: 設計・調査・指示
-   - Claude GitHub App: 実装・テスト作成
-   - 役割分担による効率的な開発
-
-5. **大規模コード品質改善（Issue #15の経験）**
-   - **717件のエラー対応**: 自動修正 + 手動修正の段階的アプローチが効果的
-   - **Python互換性**: 型注釈の全面的な変更はsedコマンドで効率化可能
-   - **CI設定**: pyproject.tomlでの互換性ルール設定により、品質とレガシー対応の両立
-   - **テスト修正**: インポートパス変更に伴うテスト調整が必要
+1. **Claude GitHub App運用**: 自動実装 + 手動PR管理の効率的なワークフロー
+2. **SQLAlchemy 2.0**: session管理とDetachedInstanceError対策
+3. **Python 3.9+互換性**: 型注釈とCI設定の最適化
+4. **テスト駆動開発**: pytest + mypy + ruff による品質管理
 
 ## 注意事項
 
@@ -432,6 +359,53 @@ python3 -m ruff check src/ --fix --unsafe-fixes
 ```
 
 **重要**: このプロジェクトはPython 3.9+の互換性を維持する必要があります。新しい型注釈構文やAPI使用時は必ず互換性を確認してください。
+
+## 🚨 CI失敗時の対応方針
+
+### Claude GitHub App Bash Permission制限について
+
+**重要**: Claude GitHub AppがPRのCIテスト失敗を修正する際、Bash Permission制限により以下の問題が発生することがあります：
+
+#### 典型的な問題パターン
+1. **ruffリンターエラー**: インポート未使用、空白行の問題など
+2. **mypyタイプエラー**: 型注釈の不整合
+3. **pytestテストエラー**: テスト期待値の不一致
+
+#### 推奨対応方法: ローカル修正
+
+Claude GitHub Appが3回以上修正を試みても失敗する場合は、ローカル環境での修正を推奨します：
+
+```bash
+# 1. 問題のあるブランチをローカルにチェックアウト
+git fetch origin
+git checkout claude/issue-X-YYYYMMDD_HHMMSS
+
+# 2. CI失敗の原因を特定
+python3 -m ruff check src/     # リンターエラー確認
+python3 -m mypy src/          # 型チェックエラー確認  
+python3 -m pytest            # テストエラー確認
+
+# 3. 自動修正を実行
+python3 -m ruff check src/ --fix
+
+# 4. 手動修正が必要なエラーを対応
+# （型注釈、インポート削除、テスト期待値調整など）
+
+# 5. 修正をコミット・プッシュ
+git add -A
+git commit -m "fix: Resolve CI linting/type errors"
+git push origin claude/issue-X-YYYYMMDD_HHMMSS
+```
+
+#### 成功事例
+- **PR #20**: Claude GitHub Appが3回修正を試みたが、ruffエラーが残存
+- **ローカル修正**: 13個のruffエラーを一括で自動修正し、CIが通過
+- **効果**: 132テスト全て成功、mypyエラーなし、PR即座にマージ可能
+
+#### いつローカル修正を選ぶべきか
+- Claude GitHub Appが同じエラーで3回以上失敗した場合
+- 単純なリンター・フォーマットエラーの場合
+- CIの迅速な通過が必要な場合
 
 ## CI/CDテスト対応ガイド
 
