@@ -100,6 +100,8 @@ class Run(Base):
     status: Mapped[str] = mapped_column(String, default="Tried", nullable=False)
     source: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     notion_page_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    notion_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    notion_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     comfyui_workflow_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.current_timestamp(), nullable=False
@@ -141,6 +143,8 @@ class Run(Base):
             'status': self.status,
             'source': self.source,
             'notion_page_id': self.notion_page_id,
+            'notion_id': self.notion_id,
+            'notion_url': self.notion_url,
             'comfyui_workflow_id': self.comfyui_workflow_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
