@@ -11,6 +11,7 @@ import click
 from dotenv import load_dotenv
 
 from .db import db_commands
+from .notion import notion
 from .run import run_commands
 from .search import search_commands
 from .yaml_cmd import yaml_commands
@@ -128,5 +129,6 @@ cli.add_command(db_commands)
 cli.add_command(yaml_commands)
 cli.add_command(search_commands)
 cli.add_command(run_commands)
+cli.add_command(notion)
 
-__all__ = ["cli", "setup_logging", "handle_error", "db_commands", "yaml_commands", "search_commands", "run_commands"]
+__all__ = ["cli", "setup_logging", "handle_error", "db_commands", "yaml_commands", "search_commands", "run_commands", "notion"]
