@@ -111,7 +111,7 @@ def display_table(headers: List[str], rows: List[List[str]], title: Optional[str
         col_widths.append(max_width + 2)
 
     # ヘッダーを表示
-    header_line = "".join(h.ljust(w) for h, w in zip(headers, col_widths, strict=False))
+    header_line = "".join(h.ljust(w) for h, w in zip(headers, col_widths))
     click.echo(click.style(header_line, fg='white', bold=True))
     click.echo(click.style("-" * len(header_line), fg='white'))
 
@@ -281,7 +281,7 @@ class CliState:
             ctx: Click コンテキスト
         """
         self.ctx = ctx
-        self._db_manager: DatabaseManager | None = None
+        self._db_manager: Optional[DatabaseManager] = None
 
     @property
     def db_manager(self) -> DatabaseManager:

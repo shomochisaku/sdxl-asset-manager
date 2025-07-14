@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import click
 import pytest
 from click.testing import CliRunner
 
@@ -17,12 +18,14 @@ from src.cli import cli
 @pytest.fixture
 def temp_db():
     """テスト用の一時データベースファイルを提供します."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
-        db_path = tmp_file.name
+    # ファイルを作成せず、パスだけを生成
+    temp_dir = tempfile.mkdtemp()
+    db_path = os.path.join(temp_dir, "test.db")
     yield db_path
     # クリーンアップ
-    if os.path.exists(db_path):
-        os.unlink(db_path)
+    if os.path.exists(temp_dir):
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
@@ -59,7 +62,8 @@ class TestMainCLI:
     def test_cli_with_config_option(self, runner, temp_env_file):
         """--configオプションが正常に動作することをテストします."""
         with patch('src.cli.load_dotenv') as mock_load_dotenv:
-            result = runner.invoke(cli, ['--config', temp_env_file, '--help'])
+            # Use db --help to ensure CLI callback is executed
+            result = runner.invoke(cli, ['--config', temp_env_file, 'db', '--help'])
             assert result.exit_code == 0
             mock_load_dotenv.assert_called_once_with(temp_env_file)
 
@@ -95,7 +99,7 @@ class TestMainCLI:
                 f.write("TEST_VAR=auto_loaded\n")
             
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(cli, ['db', '--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_called_once()
 
@@ -104,7 +108,7 @@ class TestMainCLI:
         with runner.isolated_filesystem():
             # .envファイルが存在しない状態
             with patch('src.cli.load_dotenv') as mock_load_dotenv:
-                result = runner.invoke(cli, ['--help'])
+                result = runner.invoke(cli, ['db', '--help'])
                 assert result.exit_code == 0
                 mock_load_dotenv.assert_not_called()
 
@@ -121,10 +125,11 @@ class TestCLIErrorHandling:
 
     def test_handle_file_not_found_error(self, runner):
         """ファイルが見つからないエラーの処理をテストします."""
-        # 存在しない設定ファイルを指定
-        result = runner.invoke(cli, ['--config', '/nonexistent/file.env', '--help'])
+        # 存在しない設定ファイルを指定（--helpを使わずにコマンド実行）
+        result = runner.invoke(cli, ['--config', '/nonexistent/file.env', 'db', 'status'])
         # Click自体が存在チェックするため、エラーが発生する
         assert result.exit_code != 0
+        assert 'does not exist' in result.output
 
     def test_verbose_error_output(self, runner):
         """--verboseでの詳細エラー出力をテストします."""
@@ -143,8 +148,11 @@ class TestCLILogging:
         from src.cli import setup_logging
         import logging
         
-        setup_logging()
+        # ロガーをリセット
         logger = logging.getLogger()
+        logger.setLevel(logging.WARNING)  # デフォルト状態にリセット
+        
+        setup_logging()
         assert logger.level == logging.INFO
 
     def test_setup_logging_verbose(self):
@@ -152,8 +160,11 @@ class TestCLILogging:
         from src.cli import setup_logging
         import logging
         
-        setup_logging(verbose=True)
+        # ロガーをリセット
         logger = logging.getLogger()
+        logger.setLevel(logging.WARNING)  # デフォルト状態にリセット
+        
+        setup_logging(verbose=True)
         assert logger.level == logging.DEBUG
 
     def test_setup_logging_quiet(self):
@@ -191,7 +202,7 @@ class TestCLIContext:
         """コンテキストオブジェクトの初期化をテストします."""
         # カスタムコマンドを使ってコンテキストをテスト
         @cli.command()
-        @pytest.mark.click.pass_context
+        @click.pass_context
         def test_context(ctx):
             """テスト用コマンド."""
             click.echo(f"config_path: {ctx.obj.get('config_path')}")

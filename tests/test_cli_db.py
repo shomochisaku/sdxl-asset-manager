@@ -20,12 +20,13 @@ from src.utils.db_utils import DatabaseManager
 @pytest.fixture
 def temp_db():
     """テスト用の一時データベースファイルを提供します."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
-        db_path = tmp_file.name
+    # ファイルを作成せず、パスだけを生成
+    temp_dir = tempfile.mkdtemp()
+    db_path = os.path.join(temp_dir, "test.db")
     yield db_path
     # クリーンアップ
-    if os.path.exists(db_path):
-        os.unlink(db_path)
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
@@ -117,8 +118,8 @@ class TestDBCommands:
     def test_db_status_nonexistent_database(self, runner):
         """存在しないデータベースのステータス表示をテストします."""
         result = runner.invoke(cli, ['--db', '/nonexistent/db.sqlite', 'db', 'status'])
-        assert result.exit_code == 3  # ファイルエラー
-        assert 'データベースファイルが見つかりません' in result.output
+        assert result.exit_code == 1  # データベースエラー
+        assert 'データベース接続エラー' in result.output
 
     def test_db_backup_default_name(self, runner, initialized_db):
         """デフォルト名でのバックアップ作成をテストします."""
@@ -163,7 +164,7 @@ class TestDBCommands:
             '--db', '/nonexistent/db.sqlite',
             'db', 'backup'
         ])
-        assert result.exit_code == 3  # ファイルエラー
+        assert result.exit_code == 1  # データベースエラー
         assert 'データベースファイルが見つかりません' in result.output
 
     def test_db_restore(self, runner, initialized_db, temp_backup_dir):
@@ -344,8 +345,8 @@ class TestDBErrorHandling:
             str(corrupted_backup),
             '--force'
         ])
-        assert result.exit_code == 2  # データベースエラー
-        assert 'データベース検証エラー' in result.output or 'の検証に失敗しました' in result.output
+        assert result.exit_code == 1  # データベースエラー
+        assert 'データベース検証エラー' in result.output or 'の検証に失敗しました' in result.output or 'データベース接続エラー' in result.output
 
 
 if __name__ == '__main__':

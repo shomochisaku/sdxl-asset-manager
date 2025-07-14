@@ -79,7 +79,7 @@ class YAMLValidator:
                 raise YAMLValidationError(f"Field '{field}' must be a string")
 
         # 数値フィールド
-        if "cfg" in data and not isinstance(data["cfg"], int | float):
+        if "cfg" in data and not isinstance(data["cfg"], (int, float)):
             raise YAMLValidationError("Field 'cfg' must be a number")
 
         if "steps" in data and not isinstance(data["steps"], int):

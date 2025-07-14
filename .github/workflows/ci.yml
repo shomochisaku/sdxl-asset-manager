@@ -9,17 +9,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
 
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.9'
     
     - name: Cache pip
       uses: actions/cache@v3
@@ -36,19 +33,18 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest || echo "No tests found yet - this is expected for initial setup"
+        pytest tests/ --tb=short
     
-    - name: Run mypy
+    - name: Run mypy type checking
       run: |
         mypy src/
     
-    - name: Run ruff
+    - name: Run ruff linting
       run: |
-        echo "Temporarily disabled ruff check to unblock PR #11"
+        ruff check src/ --statistics
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
-      if: matrix.python-version == '3.12'
       with:
         file: ./htmlcov/index.html
         fail_ci_if_error: false

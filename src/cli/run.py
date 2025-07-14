@@ -3,7 +3,7 @@
 このモジュールは実行履歴の一覧表示、詳細表示、更新、削除機能を提供します。
 """
 
-from typing import Optional, Tuple
+from typing import Optional
 
 import click
 from sqlalchemy import desc
@@ -87,7 +87,7 @@ def run_commands(ctx: click.Context) -> None:
 @click.pass_context
 def list(
     ctx: click.Context,
-    status: Tuple,
+    status: tuple,
     model: Optional[str],
     limit: int,
     offset: int,
@@ -103,11 +103,6 @@ def list(
 
     try:
         db_manager = state.db_manager
-
-        # フィルタ条件を構築
-        if status:
-            # 複数ステータスの場合は、ここではFilteringできないので後でSQLクエリで対応
-            pass
 
         with db_manager.get_session() as session:
             query_obj = session.query(Run)
@@ -446,7 +441,7 @@ def update(
     help='関連する画像やLoRAの関連付けも削除'
 )
 @click.pass_context
-def delete(ctx: click.Context, run_ids: Tuple, force: bool, cascade: bool) -> None:
+def delete(ctx: click.Context, run_ids: tuple, force: bool, cascade: bool) -> None:
     """実行履歴を削除します.
 
     指定されたRun IDの実行履歴を削除します。

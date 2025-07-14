@@ -5,7 +5,7 @@
 
 import json
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import click
 import yaml
@@ -211,7 +211,7 @@ def load(
     help='厳密バリデーション（警告もエラーとして扱う）'
 )
 @click.pass_context
-def validate(ctx: click.Context, files: Tuple, strict: bool) -> None:
+def validate(ctx: click.Context, files: tuple, strict: bool) -> None:
     """YAMLファイルの形式を検証します.
 
     指定されたYAMLファイルのスキーマと値の妥当性を検証します。

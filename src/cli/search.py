@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional
 
 import click
 from sqlalchemy import and_, desc, func, or_
@@ -95,7 +95,7 @@ def prompt(
     ctx: click.Context,
     query: str,
     search_type: str,
-    status: Tuple,
+    status: tuple,
     model: Optional[str],
     lora: Optional[str],
     limit: int,
@@ -342,7 +342,7 @@ def model(
 def lora(
     ctx: click.Context,
     lora_name: str,
-    status: Tuple,
+    status: tuple,
     limit: int,
     output: str
 ) -> None:
@@ -504,7 +504,7 @@ def advanced(
     ctx: click.Context,
     date_from: Optional[datetime],
     date_to: Optional[datetime],
-    status: Tuple,
+    status: tuple,
     cfg_min: Optional[float],
     cfg_max: Optional[float],
     steps_min: Optional[int],
