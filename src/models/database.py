@@ -126,7 +126,7 @@ class Run(Base):
 
     def to_dict(self) -> Dict[str, Any]:
         """YAML export用の辞書形式に変換."""
-        result = {
+        result: Dict[str, Any] = {
             'run_title': self.title,
             'prompt': self.prompt,
             'negative': self.negative,
@@ -281,7 +281,7 @@ class RunLora(Base):
 
     def to_dict(self) -> Dict[str, Any]:
         """YAML export用の辞書形式に変換."""
-        result = {
+        result: Dict[str, Any] = {
             'run_id': self.run_id,
             'lora_id': self.lora_id,
             'weight': self.weight
@@ -319,7 +319,7 @@ class RunTag(Base):
 
     def to_dict(self) -> Dict[str, Any]:
         """YAML export用の辞書形式に変換."""
-        result = {
+        result: Dict[str, Any] = {
             'run_id': self.run_id,
             'tag_id': self.tag_id
         }
