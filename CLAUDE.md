@@ -237,10 +237,10 @@ CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持し
 4. 生成されたPRをレビュー・マージ
 
 ### 実装優先順位
-1. **Phase 1**: 基本機能（DB、YAML loader、CLI）
-2. **Phase 2**: Notion同期
-3. **Phase 3**: ComfyUI連携
-4. **Phase 4**: LLMエージェント
+1. **Phase 1**: 基本機能（DB、YAML loader、CLI） ✅ **完了**
+2. **Phase 2**: Notion同期 ✅ **完了**
+3. **Phase 3**: LLMエージェント ← **最優先実装**
+4. **Phase 4**: ComfyUI連携 + 高度な機能
 
 ## モジュール構成
 
@@ -248,7 +248,8 @@ CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持し
 - `src/notion_sync.py`: Notion API連携
 - `src/yaml_loader.py`: YAML→DB変換
 - `src/models/`: SQLAlchemyモデル定義
-- `src/agent_tools/`: LLMツール実装
+- `src/agent_tools/`: LLMエージェント実装
+- `src/cli/agent.py`: LLMエージェントCLI統合
 
 ## 環境変数
 
@@ -256,6 +257,8 @@ CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持し
 - `NOTION_API_KEY`: Notion APIトークン
 - `NOTION_DATABASE_ID`: 対象データベースID
 - `COMFYUI_HOST`: ComfyUI APIホスト（デフォルト: localhost:8188）
+- `OPENAI_API_KEY`: OpenAI APIキー（LLMエージェント用）
+- `ANTHROPIC_API_KEY`: Anthropic APIキー（LLMエージェント用）
 
 ## デバッグ情報
 
@@ -293,17 +296,29 @@ CLAUDE.mdの互換性ガイドラインに従い、Python 3.9+互換を維持し
 **実行者**: エンドユーザー（CLI初心者）  
 **結果**: 全機能が期待通りに動作、Phase 2への準備完了
 
-#### Phase 2: 外部連携機能 🔄 **進行中**
-- **Notion API同期**: Notion DB ↔ SQLite 双方向同期
-- **ComfyUI API連携**: ワークフロー生成・実行
-- **バッチ処理**: 自動化スクリプト
+##### 🎯 Phase 2完了確認 (2025-07-14)
+**Notion API同期機能実装完了**:
+- ✅ **NotionClient実装**: レート制限・エラーハンドリング対応
+- ✅ **双方向同期**: Notion ↔ SQLite完全対応
+- ✅ **CLI統合**: 5つのnotionコマンド実装
+- ✅ **テスト完備**: 160+テストケース、CI通過
+- ⚠️ **実動作確認**: 実際のNotion APIでの動作テスト未実施
+- ⚠️ **ドキュメント**: セットアップ手順・トラブルシューティング要整備
 
-#### Phase 3: AI機能強化
-- **LLMエージェント**: SQL検索ツール、プロンプト最適化
-- **ベクトル検索**: Supabase/Chroma連携（オプション）
+#### Phase 2: 外部連携機能 ✅ **完了** (Notion API実装済み、実動作テスト要)
+- **Notion API同期**: Notion DB ↔ SQLite 双方向同期 ✅
+- **CLI統合**: 5つのnotionコマンド実装済み ✅
+- **テストスイート**: 160+テストケース実装済み ✅
+- **実動作確認**: 実際のNotion APIでの動作テスト要
+
+#### Phase 3: AI機能強化 🔄 **進行中** (LLMエージェント最優先)
+- **LLMエージェント**: 対話型相談、データ分析、プロンプト最適化 ← **最優先実装**
+- **データベース連携AI**: SQLクエリ生成・実行、統計分析
 - **推奨機能**: 類似画像・プロンプト提案
+- **ベクトル検索**: Supabase/Chroma連携（オプション）
 
 #### Phase 4: 高度な機能
+- **ComfyUI API連携**: ワークフロー生成・実行 ← **手動制御方針により移動**
 - **Web UI**: Streamlit/FastAPI インターフェース
 - **チーム機能**: PostgreSQL移行、共有機能
 - **クラウド対応**: AWS/GCP ホスティング
