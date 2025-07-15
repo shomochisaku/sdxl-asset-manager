@@ -5,17 +5,26 @@
 ## 概要
 
 本システムは以下の機能を提供します：
-- 購入素材（モデル/LoRA/プロンプト/パラメータ）の管理
-- 自作生成ログの記録と検索
-- Notion DBとの同期
+
+### ✅ 実装完了機能 (Phase 1-3)
+- **購入素材の管理**: モデル/LoRA/プロンプト/パラメータのデータベース管理
+- **生成ログの記録と検索**: 詳細な検索・統計機能
+- **Notion DB同期**: 双方向同期・競合検出・解決
+- **LLMエージェント**: 対話型AI相談・データ分析・プロンプト最適化
+- **YAML インポート/エクスポート**: データの一括処理
+
+### 🔄 今後の実装予定 (Phase 4)
 - ComfyUIとの連携
-- LLMエージェントによる最適化提案
+- Web UI
+- チーム機能・クラウド対応
 
 ## 必要要件
 
-- Python 3.12+
+- Python 3.9+
 - SQLite3
-- Notion API トークン
+- Notion API トークン（Phase 2機能用）
+- OpenAI API キー（LLMエージェント用）
+- Anthropic API キー（LLMエージェント用）
 - ComfyUI（オプション）
 
 ## セットアップ
@@ -23,9 +32,10 @@
 ### 🚀 新しい端末での開発環境構築
 
 #### 1. 前提条件
-- Python 3.12+ （必須）
+- Python 3.9+ （必須）
 - Git
 - GitHub CLI (Claude GitHub App連携用)
+- LLM API キー（OpenAI または Anthropic）
 
 #### 2. リポジトリセットアップ
 ```bash
@@ -40,7 +50,7 @@ git checkout main
 
 #### 3. Python環境セットアップ
 ```bash
-# Python 3.12確認
+# Python 3.9+確認
 python3 --version
 
 # 依存関係インストール
@@ -58,6 +68,8 @@ touch .env
 # 必要に応じて以下を設定
 echo "NOTION_API_KEY=your_notion_api_key" >> .env
 echo "NOTION_DATABASE_ID=your_database_id" >> .env
+echo "OPENAI_API_KEY=your_openai_api_key" >> .env
+echo "ANTHROPIC_API_KEY=your_anthropic_api_key" >> .env
 echo "COMFYUI_HOST=localhost:8188" >> .env
 ```
 
@@ -124,6 +136,15 @@ python -m src run list --status Final
 
 # データベースステータス確認
 python -m src db status
+
+# Notion API連携 (Phase 2)
+python -m src notion setup
+python -m src notion sync --direction both
+
+# LLMエージェント機能 (Phase 3)
+python -m src agent chat           # 対話型AI相談
+python -m src agent analyze        # データ分析
+python -m src agent recommend      # 最適化提案
 ```
 
 #### 方法2: インストール後のコマンド (本番運用)
@@ -137,6 +158,11 @@ sdxl-asset-manager yaml load data/yamls/ --recursive
 sdxl-asset-manager search prompt "masterpiece 1girl" 
 sdxl-asset-manager run list --status Final
 sdxl-asset-manager db status
+
+# Notion API連携とLLMエージェント
+sdxl-asset-manager notion sync --direction both
+sdxl-asset-manager agent chat
+sdxl-asset-manager agent analyze
 ```
 
 #### 方法3: 直接実行 (開発時)
