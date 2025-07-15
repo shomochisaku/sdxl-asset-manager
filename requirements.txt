@@ -20,9 +20,7 @@ Pillow>=10.1.0
 
 # LLM and embeddings
 openai>=1.6.1
-anthropic>=0.8.0
-# langchain>=0.1.0  # optional
-# chromadb>=0.4.20  # optional
+anthropic>=0.18.0
 
 # Development dependencies
 pytest>=7.4.3
