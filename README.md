@@ -1,22 +1,38 @@
-# SDXL Asset Manager
+# SDXL Asset Manager [ARCHIVED]
 
-画像生成ワークフロー統合システム - Stable Diffusion XLの素材管理と生成ログを一元管理するツール
+**🚨 このプロジェクトはアーカイブされました。MCP (Model Context Protocol) を使用したよりシンプルなアプローチに移行しました。**
 
-## 概要
+## プロジェクトの学習成果
 
-本システムは以下の機能を提供します：
+このプロジェクトは画像生成ワークフロー統合システムとして開発されましたが、以下の貴重な学習経験を提供しました：
 
-### ✅ 実装完了機能 (Phase 1-3)
-- **購入素材の管理**: モデル/LoRA/プロンプト/パラメータのデータベース管理
-- **生成ログの記録と検索**: 詳細な検索・統計機能
-- **Notion DB同期**: 双方向同期・競合検出・解決
-- **LLMエージェント**: 対話型AI相談・データ分析・プロンプト最適化
-- **YAML インポート/エクスポート**: データの一括処理
+### 実装した技術スタック
+- **SQLAlchemy 2.0** - モダンなORM実装パターン
+- **Click CLI** - Pythonでの高度なCLI構築
+- **Notion API** - 外部API統合と同期処理
+- **pytest/mypy/ruff** - 包括的なテスト・品質管理
+- **Claude GitHub App** - AI支援開発ワークフロー
+- **GitHub Actions CI/CD** - 自動化されたテストパイプライン
 
-### 🔄 今後の実装予定 (Phase 4)
-- ComfyUIとの連携
-- Web UI
-- チーム機能・クラウド対応
+### なぜアーカイブしたか
+
+当初の目的（Notion上の画像生成データ管理）に対して、本実装は過剰設計でした：
+- 複雑なSQLite + Notion同期ロジック
+- 重複したデータストレージ
+- メンテナンスの複雑性
+
+**より良い解決策**: MCP + Claude Desktop/Web
+- Notion MCPサーバーで直接データベースアクセス
+- Pythonコード不要
+- シンプルで保守性の高いアーキテクチャ
+
+### 実装完了機能（学習記録として）
+- ✅ SQLAlchemyデータベース層（Phase 1）
+- ✅ YAML ローダー・エクスポート機能（Phase 1）
+- ✅ Click CLIフレームワーク（Phase 1）
+- ✅ Notion API双方向同期（Phase 2）
+- ✅ LLMエージェント統合（Phase 3）
+- ✅ 包括的なテストスイート（160+テスト）
 
 ## 必要要件
 
@@ -228,6 +244,23 @@ python3 -m ruff check src/
 - **開発ガイド**: [CLAUDE.md](CLAUDE.md)参照
 - **Issue**: GitHub Issueで質問・バグ報告
 - **実装依頼**: @claudeメンションで自動実装
+
+## MCP版への移行
+
+新しいアプローチについては以下を参照：
+- [MCP (Model Context Protocol) ドキュメント](https://github.com/modelcontextprotocol/docs)
+- [Notion MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/notion)
+- [Claude Desktop MCP設定](https://docs.anthropic.com/en/docs/developer-tools/model-context-protocol)
+
+### GitHubリポジトリのアーカイブ方法
+
+1. GitHubでこのリポジトリにアクセス
+2. Settings → General
+3. "Archive this repository" セクションまでスクロール
+4. "Archive this repository" ボタンをクリック
+5. 確認ダイアログで承認
+
+アーカイブ後もコードは読み取り専用で残り、学習資料として活用できます。
 
 ## ライセンス
 
